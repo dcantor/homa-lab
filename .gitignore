@@ -1,0 +1,6 @@
+images/
+nodes/
+results/
+tests/.venv/
+__pycache__/
+*.pyc

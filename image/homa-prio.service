@@ -1,0 +1,12 @@
+[Unit]
+Description=homa_prio: adjust Homa's priority cutoffs from the observed workload (HomaModule util/)
+After=systemd-modules-load.service network-online.target
+ConditionPathExists=/proc/sys/net/homa
+
+[Service]
+ExecStart=/usr/local/bin/homa_prio
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

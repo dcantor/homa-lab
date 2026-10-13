@@ -1,0 +1,5 @@
+<network>
+  <name>homa-link2</name>
+  <bridge name='virbr-homal2' stp='off' delay='0'/>
+  <mtu size='9000'/>
+</network>

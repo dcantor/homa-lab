@@ -1,0 +1,90 @@
+#!/bin/bash
+# sw1's egress policy on its host ports: what a datacenter top-of-rack switch does to Homa's packets.
+#   sw-qos apply prio|fifo|off [RATE] [LIMIT] [PORT..]   prio: htb RATE -> prio, 8 strict bands chosen by the top 3 bits of
+#                                                        DSCP / IPv6 traffic class (Homa priority 7 = first band), LIMIT
+#                                                        packets each; fifo: htb RATE -> one queue of 8 x LIMIT; off: no shaping
+#   sw-qos loss PORT N|off        drop 1 out of N packets leaving PORT (clsact egress, gact netrand), any protocol
+#   sw-qos show [PORT..]          the qdiscs, per-band counters (sent / dropped / backlog) and the loss filter
+#   sw-qos stats [PORT..]         one JSON object: per port, per Homa priority, packets / bytes / drops
+set -euo pipefail
+PORTS_ALL=(eth1 eth2 eth3 eth4)
+die() { echo "sw-qos: $*" >&2; exit 1; }
+ports() { [[ $# -gt 0 ]] && echo "$*" || echo "${PORTS_ALL[*]}"; }
+
+apply_port() {   # port mode rate limit
+  local p="$1" mode="$2" rate="$3" limit="$4" prio band
+  # queue wire-size frames, as a switch port sees them: no GRO, and no 64 KB virtio receive aggregates (rx-gro-hw)
+  ethtool -K "$p" gro off gso off tso off rx-gro-hw off >/dev/null 2>&1 || true
+  tc qdisc del dev "$p" root 2>/dev/null || true
+  case "$mode" in
+    off) ;;
+    fifo)
+      tc qdisc add dev "$p" root handle 1: htb default 1
+      tc class add dev "$p" parent 1: classid 1:1 htb rate "$rate" ceil "$rate" quantum 9014 burst 90k cburst 90k
+      tc qdisc add dev "$p" parent 1:1 handle 10: pfifo limit $(( limit * 8 )) ;;
+    prio)
+      tc qdisc add dev "$p" root handle 1: htb default 1
+      tc class add dev "$p" parent 1: classid 1:1 htb rate "$rate" ceil "$rate" quantum 9014 burst 90k cburst 90k
+      # strict priority: band 10:1 is served first. Unclassified traffic (ARP, ND) -> the lowest band via the priomap.
+      tc qdisc add dev "$p" parent 1:1 handle 10: prio bands 8 priomap 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7
+      for prio in 7 6 5 4 3 2 1 0; do
+        band=$(( 8 - prio ))                                      # Homa priority 7 -> 10:1 ... priority 0 -> 10:8
+        tc filter add dev "$p" parent 10: protocol ip   prio 1 flower ip_tos "$(( prio << 5 ))/0xe0" classid "10:$band"
+        tc filter add dev "$p" parent 10: protocol ipv6 prio 2 flower ip_tos "$(( prio << 5 ))/0xe0" classid "10:$band"
+        tc qdisc add dev "$p" parent "10:$band" handle "$(( 20 + band )):" pfifo limit "$limit"
+      done ;;
+    *) die "mode must be prio, fifo or off" ;;
+  esac
+}
+
+cmd_apply() {
+  local mode="${1:?mode}" rate="${2:-1gbit}" limit="${3:-200}"; shift 3 2>/dev/null || shift $#
+  local p; for p in $(ports "$@"); do apply_port "$p" "$mode" "$rate" "$limit"; done
+  printf 'SW_QOS_MODE=%s\nSW_QOS_RATE=%s\nSW_QOS_LIMIT=%s\n' "$mode" "$rate" "$limit" > /run/sw-qos.state
+  echo "sw-qos: $mode rate=$rate limit=$limit on $(ports "$@")"
+}
+
+cmd_loss() {
+  local p="${1:?port}" n="${2:?N or off}"
+  tc qdisc add dev "$p" clsact 2>/dev/null || true
+  tc filter del dev "$p" egress 2>/dev/null || true
+  [[ "$n" == off ]] && { echo "sw-qos: no loss on $p"; return; }
+  [[ "$n" =~ ^[0-9]+$ && "$n" -ge 2 ]] || die "N must be an integer >= 2 (drop 1 out of N)"
+  tc filter add dev "$p" egress matchall action gact pass random netrand drop "$n"
+  echo "sw-qos: dropping 1/$n of the packets leaving $p"
+}
+
+cmd_show() {
+  local p; [[ -f /run/sw-qos.state ]] && cat /run/sw-qos.state
+  for p in $(ports "$@"); do echo "== $p"; tc -s qdisc show dev "$p"; tc -s filter show dev "$p" egress 2>/dev/null | grep -E 'gact|random|Sent' || true; done
+}
+
+cmd_stats() {   # parse `tc -s -j qdisc` into {port: {mode, prio: {7: {...}, ...}, total: {...}}}
+  python3 - "$(ports "$@")" <<'PY'
+import json, subprocess, sys
+out = {}
+for port in sys.argv[1].split():
+    q = json.loads(subprocess.run(["tc", "-s", "-j", "qdisc", "show", "dev", port], capture_output=True, text=True).stdout or "[]")
+    bands, total = {}, None
+    for e in q:
+        h, parent = e.get("handle", ""), e.get("parent", "")
+        st = {"packets": e.get("packets", 0), "bytes": e.get("bytes", 0), "drops": e.get("drops", 0), "backlog": e.get("backlog", 0), "qlen": e.get("qlen", 0)}
+        if e.get("kind") == "pfifo" and parent.startswith("10:"):
+            band = int(parent.split(":")[1], 16)
+            bands[str(8 - band)] = st
+        if e.get("kind") in ("htb", "pfifo_fast", "fq_codel", "noqueue", "mq") and h == "1:" or (e.get("root") and total is None):
+            total = st
+    mode = "prio" if bands else ("fifo" if any(e.get("kind") == "pfifo" for e in q) else "off")
+    out[port] = {"mode": mode, "prio": bands, "total": total}
+print(json.dumps(out))
+PY
+}
+
+sub="${1:-show}"; shift || true
+case "$sub" in
+  apply) cmd_apply "$@" ;;
+  loss)  cmd_loss "$@" ;;
+  show)  cmd_show "$@" ;;
+  stats) cmd_stats "$@" ;;
+  *) die "usage: sw-qos apply prio|fifo|off [RATE] [LIMIT] [PORT..] | loss PORT N|off | show [PORT..] | stats [PORT..]" ;;
+esac

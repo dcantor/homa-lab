@@ -1,0 +1,5 @@
+<network>
+  <name>homa-oob</name>
+  <bridge name='virbr-homaoob' stp='off' delay='0'/>
+  <ip address='10.8.0.1' netmask='255.255.255.0'/>
+</network>

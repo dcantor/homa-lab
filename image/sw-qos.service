@@ -1,0 +1,13 @@
+[Unit]
+Description=sw1 egress policy (rate limit + strict priority queues by DSCP), from /etc/default/sw-qos
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=/etc/default/sw-qos
+ExecStart=/usr/local/sbin/sw-qos apply ${SW_QOS_MODE} ${SW_QOS_RATE} ${SW_QOS_LIMIT}
+
+[Install]
+WantedBy=multi-user.target
