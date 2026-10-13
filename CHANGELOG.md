@@ -5,7 +5,10 @@ All notable changes to this lab. Format: [Keep a Changelog](https://keepachangel
 ### Added
 - Lab walkthrough PDF (`docs/homa-lab-walkthrough.pdf`), built from the live lab by `tools/build_walkthrough.py`
   (`--refresh` re-collects `docs/data/`).
+- Walkthrough section 2, "Homa for dummies": the protocol in plain language, its benefits and drawbacks, TCP vs Homa.
 ### Fixed
+- Walkthrough: unscheduled data described as in the current module (only messages up to unsched_bytes; longer ones
+  are fully scheduled since September 2026).
 - Captures are taken on sw1's port, not on the receiving host: Homa's GRO handler consumes many arriving GRANT/DATA
   packets before tcpdump's tap (`gro_*_bypasses`).
 - Dissector: segment length from the reported packet length (was the snaplen); clearer label for the `urgent` marker.
