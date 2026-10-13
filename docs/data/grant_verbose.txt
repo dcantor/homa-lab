@@ -1,0 +1,15 @@
+Homa GRANT
+    Source port: 4100
+    Destination port: 32843
+    Sequence (TSO): 0
+    Type: GRANT (0x11)
+    Type name: GRANT
+    Data offset (4-byte words, high nibble): 0x50
+    Flags: 0x06
+    Urgent (0xb97d: Homa's marker for TCP-hijacked packets; always set): 0xb97d
+    Sender RPC id: 1219395
+    [RPC id (client's): 1219394]
+    [Sent by the client: False]
+    Offset: 200000
+    Priority: 0
+

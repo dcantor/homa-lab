@@ -1,0 +1,14 @@
+NODE ROLE    STATE      MGMT-IP     DATA-IP         DATA-IP6        CONSOLE  VM
+h1   host    running    10.8.0.11   192.168.80.11   fd00:80::11     5701     homa-h1
+h2   host    running    10.8.0.12   192.168.80.12   fd00:80::12     5702     homa-h2
+h3   host    running    10.8.0.13   192.168.80.13   fd00:80::13     5703     homa-h3
+h4   host    running    10.8.0.14   192.168.80.14   fd00:80::14     5704     homa-h4
+sw1  switch  running    10.8.0.20   -               -               5705     homa-sw1
+
+links (isolated libvirt bridges, MTU 9000):
+  h1 eth1 192.168.80.11  <->  sw1 eth1   (homa-link1)
+  h2 eth1 192.168.80.12  <->  sw1 eth2   (homa-link2)
+  h3 eth1 192.168.80.13  <->  sw1 eth3   (homa-link3)
+  h4 eth1 192.168.80.14  <->  sw1 eth4   (homa-link4)
+
+image: homa-base.qcow2 — kernel 6.17.8-061708-generic, HomaModule 65cecd7; sw1 default policy: prio 1gbit

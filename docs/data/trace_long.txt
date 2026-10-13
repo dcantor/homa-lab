@@ -1,0 +1,45 @@
+   0.000 ms   h1 → h2  prio 7     66 B  START_MSG 32843 → 4100 id=1219394 msg=300000
+   0.187 ms   h2 → h1  prio 7     67 B  GRANT 4100 → 32843 id=1219394 granted=200000 prio=0
+   0.327 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=0 len=8924 msg=300000
+   0.327 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=8924 len=8924 msg=300000
+   0.327 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=17848 len=8924 msg=300000
+   0.327 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=26772 len=8924 msg=300000
+   0.327 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=35696 len=8924 msg=300000
+   0.327 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=44620 len=8924 msg=300000
+   0.327 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=53544 len=8924 msg=300000
+   0.327 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=62468 len=8924 msg=300000
+   0.370 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=71392 len=8924 msg=300000
+   0.370 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=80316 len=8924 msg=300000
+   0.370 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=89240 len=8924 msg=300000
+   0.370 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=98164 len=8924 msg=300000
+   0.370 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=107088 len=8924 msg=300000
+   0.370 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=116012 len=8924 msg=300000
+   0.370 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=124936 len=8924 msg=300000
+   0.370 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=133860 len=8924 msg=300000
+   0.475 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=142784 len=8924 msg=300000
+   0.475 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=151708 len=8924 msg=300000
+   0.475 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=160632 len=8924 msg=300000
+   0.475 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=169556 len=8924 msg=300000
+   0.475 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=178480 len=8924 msg=300000
+   0.475 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=187404 len=8924 msg=300000
+   0.475 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=196328 len=8924 msg=300000
+   0.527 ms   h2 → h1  prio 7     67 B  GRANT 4100 → 32843 id=1219394 granted=300000 prio=0
+   0.656 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=205252 len=8924 msg=300000
+   0.656 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=214176 len=8924 msg=300000
+   0.656 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=223100 len=8924 msg=300000
+   0.656 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=232024 len=8924 msg=300000
+   0.656 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=240948 len=8924 msg=300000
+   0.657 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=249872 len=8924 msg=300000
+   0.657 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=258796 len=8924 msg=300000
+   0.657 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=267720 len=8924 msg=300000
+   0.712 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=276644 len=8924 msg=300000
+   0.712 ms   h1 → h2  prio 0   9014 B  DATA 32843 → 4100 id=1219394 off=285568 len=8924 msg=300000
+   0.712 ms   h1 → h2  prio 0   5598 B  DATA 32843 → 4100 id=1219394 off=294492 len=5508 msg=300000
+   2.141 ms   h2 → h1  prio 7     66 B  START_MSG 4100 → 32843 id=1219394 msg=300000
+   2.238 ms   h1 → h2  prio 7     67 B  GRANT 32843 → 4100 id=1219394 granted=200000 prio=0
+   2.357 ms   h2 → h1  prio 0   9014 B  DATA 4100 → 32843 id=1219394 off=0 len=8924 msg=300000
+   2.368 ms   h2 → h1  prio 0   9014 B  DATA 4100 → 32843 id=1219394 off=8924 len=8924 msg=300000
+   2.372 ms   h2 → h1  prio 0   9014 B  DATA 4100 → 32843 id=1219394 off=17848 len=8924 msg=300000
+   2.375 ms   h2 → h1  prio 0   9014 B  DATA 4100 → 32843 id=1219394 off=26772 len=8924 msg=300000
+   2.378 ms   h2 → h1  prio 0   9014 B  DATA 4100 → 32843 id=1219394 off=35696 len=8924 msg=300000
+… 796 more packets

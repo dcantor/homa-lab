@@ -1,0 +1,9 @@
++ make -j4 LINUX_VERSION=6.17.8-061708-generic KDIR=/lib/modules/6.17.8-061708-generic/build 'CINCLUDES=-I. -I.. $(KERN_INCLUDES) -include $(KDIR)/include/linux/kconfig.h -include lab-kconfig.h'
+++ grep -oE '[0-9]+ / [0-9]+ tests passed' /var/log/homa-unit.log
++ echo 'unit tests: PASS (840 / 840 tests passed)'
+[==========] 840 / 840 tests passed.
++ echo 'dissector: homa.lua loaded'
+dissector: homa.lua loaded
++ echo 'HOMA-BUILD-OK kernel=6.17.8-061708-generic homa=65cecd7831e8b24ba7bcd967288bb7ce26fe8eba unit tests: PASS (840 / 840 tests passed)'
+HOMA-BUILD-OK kernel=6.17.8-061708-generic homa=65cecd7831e8b24ba7bcd967288bb7ce26fe8eba unit tests: PASS (840 / 840 tests passed)
+HOMA-BUILD-RC=0

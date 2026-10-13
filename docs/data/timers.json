@@ -1,0 +1,14 @@
+{
+ "default": {
+  "mbit": 874.7,
+  "sw_drops": 5814,
+  "resends": 2164,
+  "rpc_timeouts": 22
+ },
+ "scaled": {
+  "mbit": 877.3,
+  "sw_drops": 0,
+  "resends": 302,
+  "rpc_timeouts": 0
+ }
+}

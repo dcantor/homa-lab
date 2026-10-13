@@ -1,0 +1,38 @@
+{
+ "packets": 155509,
+ "types": {
+  "DATA": 109126,
+  "START_MSG": 1204,
+  "GRANT": 43090,
+  "NEED_ACK": 726,
+  "ACK": 724,
+  "RESEND": 357,
+  "BUSY": 254,
+  "RPC_UNKNOWN": 21,
+  "CUTOFFS": 7
+ },
+ "priorities": {
+  "short_data": [
+   7
+  ],
+  "long_first_packet": [
+   0,
+   1,
+   7
+  ],
+  "long_scheduled_data": [
+   0,
+   1,
+   7
+  ],
+  "grants_carry": [
+   0,
+   1
+  ],
+  "control": [
+   7
+  ]
+ },
+ "data_packets": 109126,
+ "retransmitted": 922
+}

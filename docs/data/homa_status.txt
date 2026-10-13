@@ -1,0 +1,4 @@
+h1  kernel 6.17.8-061708-generic  homa loaded (569344 B)  homa_prio active  link_mbps 1000
+h2  kernel 6.17.8-061708-generic  homa loaded (569344 B)  homa_prio active  link_mbps 1000
+h3  kernel 6.17.8-061708-generic  homa loaded (569344 B)  homa_prio active  link_mbps 1000
+h4  kernel 6.17.8-061708-generic  homa loaded (569344 B)  homa_prio active  link_mbps 1000

@@ -84,11 +84,11 @@ the global plugin directory for the same reason.
    timeouts, and a tenth of the RESENDs. At 25–100 Gbit/s the same bytes drain 25–100× faster, so the defaults suit
    that speed.
 3. **On a light mixed workload (W3, 0.3 Gbit/s)** Homa's short-message p99 is about 2.3 ms against TCP's 3.9 ms, while
-   TCP's median is slightly lower. TCP is faster for long messages here because it gets TSO on the virtio NICs and Homa
+   the medians are within about 10% of each other. TCP is faster for long messages here because it gets TSO on the virtio NICs and Homa
    does not (software GSO in the module is "temporarily broken", per its INSTALL.md).
 4. **Offload settings:** `max_gso_size=100000` (GSO) makes 1 MB RPCs time out in this setup, which matches the module's
-   note. With `hijack_tcp=1` (TCP hijacking for TSO), small RPCs work and are faster (p50 141 µs vs ~520 µs on the old
-   tunnel links), but 1 MB RPCs time out. The defaults (`hijack_tcp=0`, `max_gso_size=1000`) are kept. Not investigated
+   note. With `hijack_tcp=1` (TCP hijacking for TSO), small RPCs work (p50 141 µs, no different from
+   without it), but 1 MB RPCs time out. The defaults (`hijack_tcp=0`, `max_gso_size=1000`) are kept. Not investigated
    further.
 5. **Unit tests vs distro headers:** HomaModule's user-space unit-test harness does not compile against the Ubuntu mainline
    headers as-is. `mock.h` redeclares `current_task` without the `__seg_gs` address space, and `mock.c` defines
@@ -100,11 +100,16 @@ the global plugin directory for the same reason.
    server trading RESEND/BUSY indefinitely. That is by design (the server is "busy"), but every remote command in the lab
    now carries its own timeout so nothing is left running.
 
+## Walkthrough
+`docs/homa-lab-walkthrough.pdf` (30 pages): Homa in five minutes, the architecture, the image build, and walkthroughs
+of the lab coming up, one RPC on the wire, sw1's queues, Homa vs TCP, incast, loss and the timers, with the tests and
+findings. Rebuild it with `tests/.venv/bin/python tools/build_walkthrough.py [--refresh]` (`--refresh` re-measures, ~5 min).
+
 ## Layout
 `lab.conf` (source of truth) · `lab.sh` · `networks/` · `image/` (builder script, sw-qos, services, dissector) ·
 `tools/build_image.sh`, `tools/homalab.py` (all measurements; JSON out) · `tests/` (Robot; `tests/resources/HomaLab.py`
 wraps homalab.py) · `results/` (per run: Robot output and `state/`, the sysctls / module / sw1 policy before the run).
 
 ## Not yet
-A portal, Lab Hub card, NMS metrics (a `/proc/net/homa_metrics` exporter), a walkthrough PDF, the upstream patch-series
+A portal, NMS metrics (a `/proc/net/homa_metrics` exporter), the upstream patch-series
 kernel as a second track, the hijack/GSO investigation.

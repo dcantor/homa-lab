@@ -1,0 +1,9 @@
+filename:       /lib/modules/6.17.8-061708-generic/updates/homa.ko
+alias:          net-pf-10-proto-146-type-2
+alias:          net-pf-2-proto-146-type-2
+version:        1.0
+description:    Homa transport protocol
+license:        Dual BSD/GPL
+srcversion:     3642FFB922B111B1E58D279
+name:           homa
+vermagic:       6.17.8-061708-generic SMP preempt mod_unload modversions

@@ -292,7 +292,7 @@ cmd_homa() {   # status | load | unload | reload | sysctl [name[=value]..] | met
   case "$sub" in
     status)
       for h in $(hosts_or_all "$@"); do
-        S "$h" 'printf "%-3s kernel %s  homa %s  homa_prio %s  sockets %s\n" "$(hostname)" "$(uname -r)" "$(lsmod | awk "/^homa /{print \"loaded (\" \$2 \" B)\"}" | grep . || echo "NOT loaded")" "$(systemctl is-active homa-prio)" "$(grep -c . /proc/net/homa_metrics 2>/dev/null >/dev/null && sudo ss -A all -a 2>/dev/null | grep -ci homa || echo 0)"' 2>/dev/null || echo "$h unreachable"
+        S "$h" 'printf "%-3s kernel %s  homa %s  homa_prio %s  link_mbps %s\n" "$(hostname)" "$(uname -r)" "$(lsmod | awk "/^homa /{print \"loaded (\" \$2 \" B)\"}" | grep . || echo "NOT loaded")" "$(systemctl is-active homa-prio)" "$(sysctl -n net.homa.link_mbps 2>/dev/null || echo -)"' 2>/dev/null || echo "$h unreachable"
       done ;;
     load)   cmd_exec hosts 'sudo modprobe homa && sudo systemctl start homa-prio; lsmod | grep -c "^homa "' ;;
     unload) cmd_exec hosts 'sudo systemctl stop homa-prio; sudo modprobe -r homa && echo unloaded' ;;
@@ -308,7 +308,7 @@ cmd_qos() { S "$SWITCH" sudo sw-qos "$@"; }
 
 cmd_verify() {   # quick end-to-end look: kernel + module, sw1 policy, jumbo reachability v4/v6, one Homa RPC per pair
   echo "== hosts"; cmd_homa status
-  echo; echo "== sw1 egress policy"; S "$SWITCH" 'cat /run/sw-qos.state 2>/dev/null; bridge link | awk "{print \$2, \$NF}"'
+  echo; echo "== sw1 egress policy"; S "$SWITCH" 'cat /run/sw-qos.state 2>/dev/null; bridge link show master br0 | sed -E "s/^[0-9]+: (eth[0-9]+)[^ ]* .* state ([a-z]+).*/br0 port \1 \2/"'
   echo; echo "== data plane: 8972-byte unfragmentable pings (MTU $DATA_MTU), IPv4 and IPv6"
   local a b r4 r6 ok=0 tot=0
   for a in "${HOSTS[@]}"; do for b in "${HOSTS[@]}"; do [[ "$a" == "$b" ]] && continue; tot=$((tot + 1))
@@ -332,7 +332,7 @@ cmd_test() {
 usage() {
   cat <<U
 usage: $(basename "$0") <command> [node...]
-  image [--force]      build images/homa-base.qcow2 (Ubuntu 26.04 + kernel $KERNEL_RELEASE + homa.ko ${HOMA_COMMIT:0:7}), ~20 min
+  image [--force]      build images/homa-base.qcow2 (Ubuntu 26.04 + kernel $KERNEL_RELEASE + homa.ko ${HOMA_COMMIT:0:7}), ~10 min
   up [node..]          create (if needed) and start the VMs (default: all)
   wait [node..]        until SSH answers and cloud-init is done
   down [node..]        shut the VMs down

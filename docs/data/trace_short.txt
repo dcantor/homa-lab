@@ -1,0 +1,25 @@
+   0.000 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219372 off=0 len=100 msg=100
+   0.208 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219372 off=0 len=100 msg=100
+   0.305 ms   h1 → h2  prio 7     96 B  CUTOFFS 32842 → 4100 id=1219372
+   0.346 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219374 off=0 len=100 msg=100
+   0.439 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219374 off=0 len=100 msg=100
+   0.545 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219376 off=0 len=100 msg=100
+   0.670 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219376 off=0 len=100 msg=100
+   0.781 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219378 off=0 len=100 msg=100
+   0.865 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219378 off=0 len=100 msg=100
+   0.953 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219380 off=0 len=100 msg=100
+   1.042 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219380 off=0 len=100 msg=100
+   1.117 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219382 off=0 len=100 msg=100
+   1.201 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219382 off=0 len=100 msg=100
+   1.263 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219384 off=0 len=100 msg=100
+   1.342 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219384 off=0 len=100 msg=100
+   1.429 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219386 off=0 len=100 msg=100
+   1.505 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219386 off=0 len=100 msg=100
+   1.588 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219388 off=0 len=100 msg=100
+   1.690 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219388 off=0 len=100 msg=100
+   1.770 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219390 off=0 len=100 msg=100
+   1.859 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219390 off=0 len=100 msg=100
+   1.922 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219392 off=0 len=100 msg=100
+   1.995 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219392 off=0 len=100 msg=100
+   4.546 ms   h2 → h1  prio 7     62 B  NEED_ACK 4100 → 32842 id=1219392
+   4.660 ms   h1 → h2  prio 7    114 B  ACK 32842 → 4100 id=1219392 acks=1

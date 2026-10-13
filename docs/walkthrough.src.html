@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>homa-lab walkthrough</title>
+{{style}}
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Lab walkthrough</div>
+  <h1>homa-lab</h1>
+  <div class="sub">Testing the Linux kernel module that implements the Homa transport protocol: four hosts running <span class="mono">homa.ko</span>, a switch with real priority queues, and experiments that show what Homa does on the wire, under incast, under loss — and where its defaults stop fitting.</div>
+  <div class="meta">
+    Version {{version}} · {{date}} · {{passed}} of {{tests}} tests passing<br>
+    Lab directory <span class="mono">~/homa-lab</span> (local git repository) · Lab Hub card <span class="mono">homa-lab</span><br>
+    Kernel <span class="mono">6.17.8-061708-generic</span> · HomaModule <span class="mono">main @ 65cecd7</span> (2026-10-08)
+  </div>
+</section>
+
+<h2 style="margin-top:0">Contents</h2>
+<div class="toc">
+  <div>1. What the lab is, and why</div>
+  <div>2. Homa in five minutes</div>
+  <div>3. Architecture</div>
+  <div>4. How the image is built</div>
+  <div>5. Getting started</div>
+  <div>6. Walkthrough A — the lab comes up</div>
+  <div>7. Walkthrough B — one RPC on the wire</div>
+  <div>8. Walkthrough C — sw1's priority queues</div>
+  <div>9. Walkthrough D — Homa against TCP</div>
+  <div>10. Walkthrough E — incast</div>
+  <div>11. Walkthrough F — loss recovery</div>
+  <div>12. Walkthrough G — the resend timers</div>
+  <div>13. Configuration and metrics</div>
+  <div>14. Tests</div>
+  <div>15. Findings</div>
+  <div>16. Lessons learned building it</div>
+  <div>17. Troubleshooting</div>
+  <div>18. What is not built yet</div>
+  <div>Appendix A — reference: lab.sh</div>
+  <div>Appendix B — sw-qos</div>
+  <div>Appendix C — lab.conf and layout</div>
+</div>
+
+<!-- ================================================================== 1 -->
+<h2>1. What the lab is, and why</h2>
+<p><b>Homa</b> is a datacenter transport protocol designed by John Ousterhout's group at Stanford as an alternative to TCP for remote procedure calls. Its claim is low <i>tail</i> latency for short messages under load — 10 to 100 times lower than TCP in their measurements — obtained by being message-based instead of byte-stream based, by letting <i>receivers</i> schedule incoming traffic, and by using the priority queues already present in datacenter switches.</p>
+<p>Homa is implemented as an out-of-tree Linux kernel module, <a href="https://github.com/PlatformLab/HomaModule">PlatformLab/HomaModule</a>. Upstreaming into the Linux kernel started in October 2024 and proceeds in stages; it is not in a mainline release yet. This lab tests that module.</p>
+<div class="box"><b>What this lab is for.</b> Behaviour and correctness, not performance. The hosts are KVM guests on a single 12-core machine, so absolute latencies and throughputs are not datacenter numbers. What the lab can show honestly is: the build works and passes its own tests; Homa works end to end over IPv4 and IPv6; what it puts on the wire; how it compares <i>on the same machines</i> with TCP; what priority queues do for it under incast; how it recovers from loss; and how its defaults behave on a slower network than it was tuned for.</div>
+<ul>
+  <li><b>Pinned and reproducible.</b> The kernel version and the HomaModule commit are fixed in <span class="mono">lab.conf</span>; one command builds the image from nothing, compiles the module and runs its 840 unit tests.</li>
+  <li><b>A switch that matters.</b> Homa depends on switch priority queues. sw1 is a Linux VM whose ports implement exactly what Homa's documentation asks of a top-of-rack switch: strict priority queues selected by the top three bits of DSCP. They can be swapped for a single FIFO to see the difference.</li>
+  <li><b>Measured with Homa's own tools.</b> <span class="mono">homa_test</span>, the echo <span class="mono">server</span> and <span class="mono">cp_node</span> come from HomaModule's <span class="mono">util/</span>; the lab adds orchestration (<span class="mono">tools/homalab.py</span>), a packet dissector, and Robot Framework suites that turn each experiment into checks.</li>
+</ul>
+
+<!-- ================================================================== 2 -->
+<h2>2. Homa in five minutes</h2>
+<h3>Messages, not streams</h3>
+<p>A Homa socket sends and receives whole <b>messages</b>: a request and its response form an <b>RPC</b>, identified by an id the client chooses (even numbers; the server answers with the id's low bit set). There are no connections — no handshake, no per-peer state to set up or tear down — and one socket can talk to any number of peers. Messages are limited to 1 MB (<span class="mono">HOMA_MAX_MESSAGE_LENGTH</span>). Applications use <span class="mono">sendmsg</span>/<span class="mono">recvmsg</span> on a <span class="mono">SOCK_DGRAM</span> socket with protocol 146; received messages land in a buffer region the application has mapped, so the kernel never copies them twice.</p>
+<h3>The receiver schedules</h3>
+<p>TCP's senders probe for bandwidth and back off when the network drops or marks packets; queues build up first. Homa inverts this. A sender may send the first part of a message — enough to cover one round trip, <span class="mono">unsched_bytes</span> — <b>unscheduled</b>, straight away. Everything after that waits for <b>GRANT</b> packets from the receiver, which knows every message heading its way and decides which to let in, and how fast. Because the receiver's downlink is where incast congestion happens, the receiver is in the best position to manage it.</p>
+<h3>SRPT, implemented with switch priorities</h3>
+<p>The receiver grants by <b>shortest remaining processing time</b>: the message closest to completion goes first. To make that real in the network, every Homa packet carries a priority (0–7, written into the top three bits of the IPv4 DSCP / IPv6 traffic class), and switches serve higher priorities first:</p>
+<ul>
+  <li><b>Unscheduled</b> packets use the top priorities, chosen by message length through <span class="mono">unsched_cutoffs</span> (short messages get the highest).</li>
+  <li><b>Scheduled</b> packets use the priority the GRANT names — the top scheduled priority (<span class="mono">max_sched_prio</span>, 6 here) for the message nearest completion, lower ones for the others.</li>
+  <li><b>Overcommitment</b>: the receiver grants several messages at once (up to <span class="mono">max_overcommit</span>) so its link never idles when one sender stalls; the priorities keep them from hurting each other.</li>
+</ul>
+<p>A short message therefore jumps over the queued bulk data at the congested switch port. That is the property section 10 measures.</p>
+<h3>Reliability without connections</h3>
+<p>The receiver tracks which byte ranges of each message have arrived. If a granted range does not arrive within <span class="mono">resend_ticks</span> milliseconds, it sends a <b>RESEND</b>; a sender that has nothing to send yet answers <b>BUSY</b>. The client's request is acknowledged implicitly by the response; servers learn that their responses arrived through <b>ACK</b>s (piggybacked on later traffic, or prompted with <b>NEED_ACK</b>). An RPC with no sign of life for <span class="mono">timeout_ticks</span> fails with <span class="mono">ETIMEDOUT</span>.</p>
+<h3>The packet types</h3>
+<table>
+<tr><th>type</th><th>code</th><th>what it carries</th></tr>
+<tr><td class="mono">DATA</td><td>0x10</td><td>a segment of a message: offset, the message length, a piggybacked ACK</td></tr>
+<tr><td class="mono">GRANT</td><td>0x11</td><td>receiver → sender: "send up to this offset, at this priority"</td></tr>
+<tr><td class="mono">RESEND</td><td>0x12</td><td>receiver → sender: "this range never arrived"</td></tr>
+<tr><td class="mono">RPC_UNKNOWN</td><td>0x13</td><td>"I have no such RPC" (the peer restarted or the RPC is gone)</td></tr>
+<tr><td class="mono">BUSY</td><td>0x14</td><td>"still here, nothing to send yet" (keeps an RPC from timing out)</td></tr>
+<tr><td class="mono">CUTOFFS</td><td>0x15</td><td>the receiver's unscheduled priority cutoffs, so senders pick priorities it wants</td></tr>
+<tr><td class="mono">NEED_ACK / ACK</td><td>0x17 / 0x18</td><td>the server asks whether its response arrived / the client confirms (up to 5 RPCs per packet)</td></tr>
+<tr><td class="mono">START_MSG</td><td>0x19</td><td>announces a message that will be fully scheduled (new in September 2026: messages that need grants send no unscheduled data)</td></tr>
+</table>
+<p class="cap">From <span class="mono">homa_wire.h</span> at the pinned commit. <span class="mono">FREEZE</span> (0x16) is a debugging aid. The lab's dissector decodes all of them.</p>
+
+<!-- ================================================================== 3 -->
+<h2>3. Architecture</h2>
+<svg viewBox="0 0 680 300" width="100%" xmlns="http://www.w3.org/2000/svg" style="font-size:11px">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#52514e"/></marker></defs>
+  <rect x="250" y="95" width="180" height="110" rx="8" fill="#eef4fc" stroke="#2a78d6" stroke-width="1.5"/>
+  <text x="340" y="118" text-anchor="middle" font-weight="700" fill="#0b0b0b">sw1</text>
+  <text x="340" y="134" text-anchor="middle" fill="#52514e">Linux bridge br0, MTU 9000</text>
+  <text x="340" y="152" text-anchor="middle" fill="#52514e">egress per port (sw-qos):</text>
+  <text x="340" y="167" text-anchor="middle" fill="#0b0b0b" class="mono">htb 1 Gbit/s → prio 8 bands</text>
+  <text x="340" y="182" text-anchor="middle" fill="#52514e">band = DSCP / TC top 3 bits</text>
+  <text x="340" y="197" text-anchor="middle" fill="#52514e">or one FIFO · optional loss</text>
+  <g>
+    <rect x="30" y="40" width="150" height="62" rx="6" fill="#fcfcfb" stroke="#8a8984"/>
+    <text x="105" y="60" text-anchor="middle" font-weight="700">h1</text><text x="105" y="76" text-anchor="middle" class="mono" fill="#52514e">192.168.80.11</text><text x="105" y="91" text-anchor="middle" class="mono" fill="#52514e">fd00:80::11</text>
+    <rect x="30" y="198" width="150" height="62" rx="6" fill="#fcfcfb" stroke="#8a8984"/>
+    <text x="105" y="218" text-anchor="middle" font-weight="700">h2</text><text x="105" y="234" text-anchor="middle" class="mono" fill="#52514e">192.168.80.12</text><text x="105" y="249" text-anchor="middle" class="mono" fill="#52514e">fd00:80::12</text>
+    <rect x="500" y="40" width="150" height="62" rx="6" fill="#fcfcfb" stroke="#8a8984"/>
+    <text x="575" y="60" text-anchor="middle" font-weight="700">h3</text><text x="575" y="76" text-anchor="middle" class="mono" fill="#52514e">192.168.80.13</text><text x="575" y="91" text-anchor="middle" class="mono" fill="#52514e">fd00:80::13</text>
+    <rect x="500" y="198" width="150" height="62" rx="6" fill="#fcfcfb" stroke="#8a8984"/>
+    <text x="575" y="218" text-anchor="middle" font-weight="700">h4</text><text x="575" y="234" text-anchor="middle" class="mono" fill="#52514e">192.168.80.14</text><text x="575" y="249" text-anchor="middle" class="mono" fill="#52514e">fd00:80::14</text>
+  </g>
+  <g stroke="#2a78d6" stroke-width="2">
+    <line x1="180" y1="71" x2="250" y2="120"/><line x1="180" y1="229" x2="250" y2="185"/>
+    <line x1="500" y1="71" x2="430" y2="120"/><line x1="500" y1="229" x2="430" y2="185"/>
+  </g>
+  <g fill="#52514e" font-size="10">
+    <text x="196" y="88">eth1 — eth1</text><text x="190" y="222">eth1 — eth2</text>
+    <text x="436" y="88">eth3 — eth1</text><text x="436" y="222">eth4 — eth1</text>
+    <text x="196" y="100" fill="#8a8984">homa-link1</text><text x="190" y="234" fill="#8a8984">homa-link2</text>
+    <text x="436" y="100" fill="#8a8984">homa-link3</text><text x="436" y="234" fill="#8a8984">homa-link4</text>
+  </g>
+  <text x="340" y="28" text-anchor="middle" fill="#0b0b0b" font-weight="600">every host: kernel 6.17.8 · homa.ko · homa_prio · echo + cp_node servers</text>
+  <text x="340" y="290" text-anchor="middle" fill="#52514e">OOB management 10.8.0.0/24 on eth0 of every VM (h1–h4 .11–.14, sw1 .20; the host is .1)</text>
+</svg>
+<p class="cap">Figure 1 — the topology. Each host↔sw1 link is its own isolated libvirt bridge; sw1 bridges the four into one L2 segment and applies its egress policy on the way out of each port, i.e. on the way <i>to</i> each host — the receiver's downlink, where incast congests.</p>
+<h3>Nodes</h3>
+<pre>{{text:status}}</pre>
+<h3>Why each piece is the way it is</h3>
+<table>
+<tr><th>piece</th><th>choice</th><th>why</th></tr>
+<tr><td>VMs, not containers</td><td>libvirt/KVM, 5 domains <span class="mono">homa-*</span></td><td>a kernel module needs its own kernel; containers share the host's</td></tr>
+<tr><td>kernel</td><td>mainline 6.17.8 (kernel.ubuntu.com) on Ubuntu 26.04</td><td>HomaModule's <span class="mono">main</span> is developed against 6.17.8; the host's 7.0 is "compiles, not actively supported"</td></tr>
+<tr><td>module</td><td>HomaModule <span class="mono">main @ 65cecd7</span></td><td>pinned in <span class="mono">lab.conf</span>; changing it is one line and <span class="mono">lab.sh image --force</span></td></tr>
+<tr><td>links</td><td>one isolated libvirt bridge per link, MTU 9000</td><td>the UDP tunnels the other labs use lost Homa's bursts in the host's socket buffer (section 16); bridges also give the virtio NICs TSO</td></tr>
+<tr><td>bottleneck</td><td>sw1 shapes each port to 1 Gbit/s; hosts set <span class="mono">link_mbps=1000</span></td><td>a defined, shared bottleneck at the receiver's downlink; Homa's default <span class="mono">link_mbps</span> assumes 25 Gbit/s</td></tr>
+<tr><td>priority queues</td><td><span class="mono">tc prio</span>, 8 strict bands, flower on <span class="mono">ip_tos</span></td><td>what HomaModule's INSTALL.md asks of the switch: top 3 bits of DSCP / traffic class select the queue, priority 7 served first</td></tr>
+<tr><td>sw1 offloads</td><td>GRO, GSO, TSO and <span class="mono">rx-gro-hw</span> off on its ports</td><td>a switch port queues wire-size frames, not 64 KB aggregates</td></tr>
+<tr><td>servers</td><td>echo (4100/4101), cp_node (4000/5000), probe cp_node (4010/5010)</td><td>standing services; probes have their own processes so they never wait behind bulk messages in a server thread</td></tr>
+</table>
+
+<!-- ================================================================== 4 -->
+<h2>4. How the image is built</h2>
+<p><span class="mono">./lab.sh image</span> (<span class="mono">tools/build_image.sh</span>) turns the Ubuntu 26.04 cloud image into <span class="mono">images/homa-base.qcow2</span>; every node is a copy-on-write overlay on it. A throw-away <b>builder VM</b> on libvirt's NAT network (the lab networks have no internet) runs <span class="mono">image/homa-build.sh</span> once and powers off:</p>
+<div class="step"><div class="n">1</div><div>Disable unattended upgrades and hold the kernel packages — the lab must not change under its tests.</div></div>
+<div class="step"><div class="n">2</div><div>Install the four mainline 6.17.8 packages (image, modules, headers) and make GRUB boot it by name; the distribution kernel stays installed as a fallback.</div></div>
+<div class="step"><div class="n">3</div><div>Clone HomaModule, check out the pinned commit, <span class="mono">make</span> against the 6.17.8 headers, install <span class="mono">homa.ko</span> into <span class="mono">/lib/modules/6.17.8-061708-generic/updates/</span>, build <span class="mono">util/</span> (cp_node, homa_test, server, homa_prio, …) into <span class="mono">/usr/local/bin</span>.</div></div>
+<div class="step"><div class="n">4</div><div>Build and run the module's <b>unit tests</b> — a user-space harness that compiles the module's sources against mocks of the kernel (840 tests). Two definitions are needed for the Ubuntu headers (section 16). The result is kept in <span class="mono">/var/log/homa-unit.result</span> and checked by suite 01.</div></div>
+<div class="step"><div class="n">5</div><div>Install the lab's pieces: <span class="mono">sw-qos</span>, the systemd units for homa_prio and the test servers, the Homa dissector for tshark. Generalise the disk (machine-id, SSH host keys, cloud-init state).</div></div>
+<p>Each node then boots with its own cloud-init seed: addresses, the <span class="mono">lab</span> user with your SSH key, <span class="mono">/etc/hosts</span> (h1–h4, and <span class="mono">node1</span>–<span class="mono">node4</span>, the names cp_node expects), <span class="mono">homa</span> in <span class="mono">modules-load.d</span>, the Homa sysctls, and the services; sw1 gets its bridge and <span class="mono">sw-qos</span> policy instead.</p>
+<pre>{{text:build_log}}</pre>
+<p class="cap">The end of the last image build (<span class="mono">images/build.log</span>).</p>
+<pre>{{text:unit}}</pre>
+<p class="cap">The unit-test result kept in the image.</p>
+<pre>{{text:modinfo}}</pre>
+<p class="cap"><span class="mono">modinfo homa</span> on h1. The alias <span class="mono">net-pf-2-proto-146</span> is what makes the kernel load the module on the first Homa socket (suite 02 tests it).</p>
+
+<!-- ================================================================== 5 -->
+<h2 class="page">5. Getting started</h2>
+<pre>./lab.sh image        # once, ~10 min: builder VM → images/homa-base.qcow2
+./lab.sh up           # define the networks and VMs, start them
+./lab.sh wait         # until SSH answers and cloud-init is done (~1 min)
+./lab.sh verify       # kernel + module, sw1 policy, jumbo pings, a Homa RTT between every pair
+./lab.sh test         # all Robot suites (~12 min) → results/&lt;timestamp&gt;/report.html
+./lab.sh down         # shut the VMs down (5 VMs, 9 GiB RAM, 10 vCPUs while running)</pre>
+<p>Log in with <span class="mono">./lab.sh ssh h1</span> (user <span class="mono">lab</span>, password <span class="mono">lab</span>, and your SSH key), or the serial console with <span class="mono">./lab.sh console h1</span>. <span class="mono">./lab.sh exec hosts '&lt;command&gt;'</span> runs a command on all four hosts in parallel. The Lab Hub (port 8088) shows the lab's VMs and can power it.</p>
+<div class="box"><b>Everything is measured from the host.</b> <span class="mono">tools/homalab.py</span> is the single place that drives experiments: it reads <span class="mono">lab.sh inventory</span>, runs Homa's tools over SSH (every remote command carries its own <span class="mono">timeout</span>), reads sw1's queue counters and Homa's kernel metrics, and prints JSON. <span class="mono">lab.sh bench</span>, the Robot suites and this document all use it.</div>
+
+<!-- ================================================================== 6 -->
+<h2>6. Walkthrough A — the lab comes up</h2>
+<p>After <span class="mono">up</span> and <span class="mono">wait</span>, <span class="mono">lab.sh homa status</span> confirms each host's kernel, the module and the priority daemon:</p>
+<pre>{{text:homa_status}}</pre>
+<p><span class="mono">lab.sh verify</span> then checks the path end to end: sw1's policy and bridge ports, an unfragmentable 9000-byte ping both ways between every pair over IPv4 and IPv6, and a Homa round trip between every ordered pair — 12 pairs × IPv4/IPv6 × 100 B / 100 KB, one at a time (concurrent tests would measure the 2-vCPU hosts' overload, not Homa):</p>
+<pre>{{text:verify}}</pre>
+<p class="cap">Output trimmed: only the IPv4 Homa lines are shown (the IPv6 ones look the same). A 100 B round trip takes about 0.15–0.25 ms between VMs; 100 KB each way about 0.8 ms at 1 Gbit/s.</p>
+
+<!-- ================================================================== 7 -->
+<h2 class="page">7. Walkthrough B — one RPC on the wire</h2>
+<p>The lab captures with tcpdump on <b>sw1's port towards h1</b>, which sees both directions before either host touches them, and decodes with tshark and the lab's own dissector, <span class="mono">image/homa.lua</span> (HomaModule's <span class="mono">dissector/</span> still expects IP protocol 253 and the pre-2024 headers). Capturing on h1 itself would miss packets: Homa's GRO handler consumes many arriving GRANT and DATA packets before tcpdump's tap (section 16). <span class="mono">homa_test h2:4100 --count 1 --length 100 rtt</span> from h1 — it runs ten warm-up RPCs before the measured one:</p>
+<pre style="font-size:7.6pt">{{text:trace_short}}</pre>
+<p>Each RPC is exactly two packets: the request fits in one DATA packet at priority 7, and so does the response — no handshake, no connection, about 0.1–0.2 ms per round trip. The <span class="mono">id</span> is the client's RPC id (even, incremented by 2); h2's packets carry it with the low bit set, which the dissector folds back. A few milliseconds after the last response, h2 asks whether its responses arrived (NEED_ACK) and h1 confirms (ACK): only then may the server free its RPC state.</p>
+<h3>A 300 KB message</h3>
+<pre style="font-size:7.4pt">{{text:trace_long}}</pre>
+<p>Now the receiver schedules. Since September 2026 a message that needs grants sends no unscheduled data at all: the sender announces it with <span class="mono">START_MSG</span> (just the length), and h2 answers one round trip later with a GRANT for the first 200,000 bytes. The DATA follows in bursts of full 9 KB frames, and h2 keeps extending the window (<span class="mono">granted=208924</span>, <span class="mono">226772</span>, …) as data drains. Every grant here says <span class="mono">prio=0</span>: with a single message incoming, Homa uses the <i>lowest</i> scheduled priority and keeps the higher ones free for shorter messages that may arrive. Packet counts for the run (11 RPCs, 300 KB each way): <span class="mono">{{text:trace_long_counts}}</span>.</p>
+<h3>A GRANT, decoded</h3>
+<pre>{{text:grant_verbose}}</pre>
+<h3>A busier capture</h3>
+<p><span class="mono">lab.sh bench capture</span> records sw1's port to h1 for four seconds while h2 streams 500 KB messages to h1 and h3 sends 100 B probes, then classifies every packet:</p>
+{{table:capture}}
+<p>Short messages and every control packet travel at priority 7; the 500 KB messages' data travels at the low priorities the GRANTs assign (0 and 1 here — two messages compete, so the one nearer completion gets 1). The few long-message DATA packets at priority 7 are all <b>retransmissions</b>: in this capture, every one of them has the retransmit flag set — Homa resends at the priority the RESEND asks for. Suite 03 asserts these properties.</p>
+
+<!-- ================================================================== 8 -->
+<h2 class="page">8. Walkthrough C — sw1's priority queues</h2>
+<p>Each of sw1's ports carries this tree, built by <span class="mono">sw-qos apply prio 1gbit 200</span> (Appendix B): an HTB class limits the port to 1 Gbit/s — the bottleneck — and feeds a <span class="mono">prio</span> qdisc with 8 bands, each a 200-packet FIFO. Flower filters pick the band from the top three bits of the IPv4 TOS / IPv6 traffic class: Homa priority 7 → band <span class="mono">10:1</span>, served first; priority 0 → <span class="mono">10:8</span>. Anything unclassified (ARP, neighbour discovery) goes to the last band.</p>
+<svg viewBox="0 0 680 150" width="100%" xmlns="http://www.w3.org/2000/svg" style="font-size:11px">
+  <rect x="10" y="55" width="110" height="40" rx="5" fill="#fcfcfb" stroke="#8a8984"/><text x="65" y="79" text-anchor="middle">from br0</text>
+  <rect x="160" y="10" width="190" height="130" rx="6" fill="#eef4fc" stroke="#2a78d6"/>
+  <text x="255" y="28" text-anchor="middle" font-weight="600">prio 10: — 8 strict bands</text>
+  <g font-size="10" fill="#0b0b0b">
+    <rect x="175" y="38" width="160" height="11" fill="#2a78d6" opacity=".9"/><text x="180" y="47" fill="#fff">band 1 · Homa prio 7</text>
+    <rect x="175" y="52" width="160" height="11" fill="#2a78d6" opacity=".75"/><text x="180" y="61" fill="#fff">band 2 · prio 6</text>
+    <rect x="175" y="66" width="160" height="11" fill="#2a78d6" opacity=".6"/><text x="180" y="75" fill="#fff">band 3 · prio 5</text>
+    <rect x="175" y="80" width="160" height="11" fill="#2a78d6" opacity=".45"/><text x="180" y="89">band 4–7 · prio 4–1</text>
+    <rect x="175" y="94" width="160" height="11" fill="#2a78d6" opacity=".3"/><text x="180" y="103">band 8 · prio 0 (TCP, ARP)</text>
+  </g>
+  <text x="255" y="128" text-anchor="middle" fill="#52514e" font-size="10">flower ip_tos (prio&lt;&lt;5)/0xe0, v4 and v6</text>
+  <rect x="390" y="50" width="130" height="50" rx="5" fill="#fcfcfb" stroke="#8a8984"/><text x="455" y="71" text-anchor="middle">htb 1:1</text><text x="455" y="87" text-anchor="middle" fill="#52514e">rate = ceil = 1 Gbit/s</text>
+  <rect x="560" y="55" width="110" height="40" rx="5" fill="#fcfcfb" stroke="#8a8984"/><text x="615" y="79" text-anchor="middle">wire → host</text>
+  <g stroke="#52514e" stroke-width="1.5"><line x1="120" y1="75" x2="160" y2="75"/><line x1="350" y1="75" x2="390" y2="75"/><line x1="520" y1="75" x2="560" y2="75"/></g>
+</svg>
+<p class="cap">Figure 2 — one sw1 egress port in <span class="mono">prio</span> mode. In <span class="mono">fifo</span> mode the prio qdisc is replaced by one queue of 8 × 200 packets; in <span class="mono">off</span> mode there is no shaping at all.</p>
+<p>After the busy capture in section 7, <span class="mono">lab.sh qos show eth1</span> shows the counters per band — the traffic sorted itself by the priority Homa wrote:</p>
+<pre style="font-size:7.6pt">{{text:qos_show}}</pre>
+<p><span class="mono">lab.sh qos stats</span> gives the same as JSON, per port and per Homa priority; the experiments read it before and after each run.</p>
+
+<!-- ================================================================== 9 -->
+<h2 class="page">9. Walkthrough D — Homa against TCP</h2>
+<p><span class="mono">lab.sh bench compare</span> runs HomaModule's <span class="mono">cp_node</span> client on h1 against the cp_node servers on h2–h4, first over Homa, then over TCP, with the same workload: message sizes drawn from Homa's <b>W3</b> distribution (mostly small messages, a long tail of large ones), {{val:compare.gbps}} Gbit/s offered, up to 8 RPCs outstanding, {{val:compare.seconds}} s each. cp_node records every RPC's round-trip time; the lab groups them by size.</p>
+{{table:compare}}
+<p class="cap">Round-trip times in ms. n = RPCs in the class.</p>
+<p>At this light load the medians are close — within about 10%, one way or the other between runs — but Homa's tail for short and medium messages is lower: its p99 is roughly 0.6× TCP's. TCP is better for long messages here, and the reason is specific to this setup: the virtio NICs give TCP segmentation offload (TSO), so TCP hands the NIC 64 KB at a time, while Homa sends 9 KB packets one by one (its own software GSO is "temporarily broken" per its INSTALL.md, and its TCP-hijacking mode failed for large messages here — section 15). Suite 04 records this run and only fails if Homa's short-message p99 is more than 1.5× TCP's.</p>
+
+<!-- ================================================================== 10 -->
+<h2>10. Walkthrough E — incast</h2>
+<p>This is the experiment the lab was built around. <b>h2 and h3</b> stream 500 KB messages to <b>h1</b> as fast as they can (one-way, four outstanding each) — together about twice what h1's 1 Gbit/s port at sw1 can take, so a queue builds there. Meanwhile <b>h4</b> sends 100-byte probes to h1, one at a time, to a separate server process, and records each probe's round trip. The run is repeated with sw1's strict priority queues and with one FIFO, for Homa and for TCP (<span class="mono">lab.sh bench incast</span>).</p>
+<div style="margin:8pt 0">{{chart:incast}}</div>
+<p class="cap">Figure 3 — probe round-trip times under incast. Hollow gray: the probe's median with no load. Filled dot: median under incast; diamond: 99th percentile. Log scale.</p>
+{{table:incast}}
+<ul>
+  <li><b>Homa with priority queues</b>: the probes travel at priority 7 and overtake the queued bulk data at sw1; their median stays within a few hundred microseconds of idle.</li>
+  <li><b>Homa with one FIFO</b>: the probes wait behind whatever Homa's grants have let into the queue — milliseconds. Homa's receiver-side scheduling still keeps that queue bounded.</li>
+  <li><b>TCP</b>: everything is priority 0, so the priority queues change nothing; the probes wait behind the TCP flows' standing queue (tens of milliseconds) in both modes.</li>
+</ul>
+<p>Suite 05 asserts the bulk senders saturate the port in every run, that priority queues lower Homa's probe p99 and cut its median at least threefold, and that Homa's probes beat TCP's by 10× at the median and 3× at p99. Homa's p99 with priority queues varies between runs (1.5–4.5 ms observed) — the reason is section 12. The one cost visible here is that sw1 drops packets in priority mode and not in FIFO mode — also section 12.</p>
+
+<!-- ================================================================== 11 -->
+<h2 class="page">11. Walkthrough F — loss recovery</h2>
+<p><span class="mono">sw-qos loss eth1 50</span> makes sw1 drop one in 50 packets leaving towards h1 — any packet: data, grants, acknowledgements (a <span class="mono">clsact</span> egress filter with a random <span class="mono">gact drop</span>). h2 then runs 300 round trips of 20 KB each way with h1 (<span class="mono">lab.sh bench loss</span>), and the lab reads Homa's counters before and after:</p>
+{{table:loss}}
+<p>Every RPC completed with the right contents. Homa has no connection state to repair: h1, receiving h2's requests, noticed gaps in the byte ranges and sent RESENDs; h2 retransmitted exactly those ranges. Losses towards h1 also hit the GRANTs and ACKs h1 receives, which the protocol absorbs the same way. Suite 06 asserts all RPCs complete, RESENDs were sent and answered, and nothing timed out.</p>
+
+<!-- ================================================================== 12 -->
+<h2>12. Walkthrough G — the resend timers</h2>
+<p>The incast runs in priority mode showed sw1 dropping thousands of packets that FIFO mode never dropped, and Homa logging RPC timeouts, with no loss injected. The per-band counters located it: the drops were in the <b>lowest</b> bands. The mechanism:</p>
+<div class="step"><div class="n">1</div><div>Two senders push 500 KB messages at h1. SRPT grants the message nearest completion at the top scheduled priority and <b>parks the others</b> at lower priorities (overcommitment).</div></div>
+<div class="step"><div class="n">2</div><div>Strict priority serves the top band first. At 1 Gbit/s a 500 KB message takes 4 ms to drain, and the next one starts behind it — so the parked messages' packets sit in the low bands for <b>tens of milliseconds</b>.</div></div>
+<div class="step"><div class="n">3</div><div>Homa's receiver hears nothing from them for <span class="mono">resend_ticks</span> = 5 ms and sends RESEND. The data is not lost — only queued — but the sender sends it again, into the same starved band.</div></div>
+<div class="step"><div class="n">4</div><div>The band overflows (sw1 drops), real gaps appear, more RESENDs follow; some RPCs exhaust <span class="mono">timeout_ticks</span> and fail.</div></div>
+<p>Homa's defaults assume a 25–100 Gbit/s network, where the same bytes drain 25–100 times faster and a 5 ms silence really means loss. Scaling the timers by ten for this 1 Gbit/s network removes the effect (<span class="mono">lab.sh homa sysctl resend_ticks=50 resend_interval=20 timeout_ticks=1000</span>):</p>
+{{table:timers}}
+<p class="cap">8 s of bulk from h2 and h3 into h1, sw1 in priority mode, 200 packets per band.</p>
+<p>The lab keeps Homa's defaults — they are what is under test — and suite 07 holds the finding: with the defaults there are spurious RESENDs; with the scaled timers there are no drops, no timeouts and at most a third of the RESENDs. A larger queue does not help (tried: 400, 800, 1600 packets per band — still drops and timeouts): the retransmissions grow to fill it.</p>
+
+<!-- ================================================================== 13 -->
+<h2 class="page">13. Configuration and metrics</h2>
+<h3>Homa's sysctls</h3>
+<p>Homa's configuration lives under <span class="mono">net.homa</span> (documented in <span class="mono">man 7 homa</span>, installed on the hosts). The lab sets only <span class="mono">link_mbps=1000</span> (<span class="mono">/etc/sysctl.d/90-homa.conf</span>, from <span class="mono">HOMA_SYSCTL</span> in lab.conf); <span class="mono">unsched_cutoffs</span> and <span class="mono">cutoff_version</span> are maintained by homa_prio. <span class="mono">lab.sh homa sysctl name=value</span> sets one on all hosts.</p>
+<pre style="font-size:7.4pt;columns:2">{{text:sysctl}}</pre>
+<h3>Homa's metrics</h3>
+<p><span class="mono">/proc/net/homa_metrics</span> holds about 700 counters per core: packets sent and received by type, bytes and packets per priority, retransmissions, timeouts, pacer and lock statistics, message-size histograms. <span class="mono">lab.sh bench metrics h1</span> sums them over cores; the experiments diff them. The ones this lab relies on:</p>
+<table>
+<tr><th>counter</th><th>meaning</th><th>used by</th></tr>
+<tr><td class="mono">packets_sent_* / packets_rcvd_*</td><td>per packet type (DATA, GRANT, RESEND, BUSY, …)</td><td>loss, timers</td></tr>
+<tr><td class="mono">priorityN_packets / _bytes</td><td>packets sent at each priority</td><td>cross-check with sw1's bands</td></tr>
+<tr><td class="mono">resent_packets</td><td>DATA packets retransmitted after a RESEND</td><td>loss</td></tr>
+<tr><td class="mono">rpc_timeouts</td><td>RPCs abandoned after <span class="mono">timeout_ticks</span></td><td>loss, timers</td></tr>
+<tr><td class="mono">client_requests_done, server_responses_done</td><td>completed messages</td><td>sanity</td></tr>
+</table>
+
+<!-- ================================================================== 14 -->
+<h2>14. Tests</h2>
+<p><span class="mono">./lab.sh test</span> runs Robot Framework over <span class="mono">tests/suites</span>; the keywords (<span class="mono">tests/resources/HomaLab.py</span>) wrap <span class="mono">tools/homalab.py</span>. A run takes about 12 minutes and leaves <span class="mono">results/&lt;timestamp&gt;/</span> with Robot's report and log and <span class="mono">state/</span> — every host's Homa sysctls and module version and sw1's policy before the run. Runs take a lock (<span class="mono">/tmp/homa-lab-test.lock</span>); suites that change sw1 or sysctls put them back in their teardown.</p>
+<table>
+<tr><th>suite</th><th>what it checks</th></tr>
+<tr><td>01 platform</td><td>the pinned kernel; the loaded module is the installed build at the pinned commit; unit tests passed in the image; sysctls, metrics, protocol-146 sockets (v4/v6); services; sw1's bridge and policy</td></tr>
+<tr><td>02 function</td><td>jumbo frames between every pair; 48 Homa round trips (12 ordered pairs × v4/v6 × 100 B/100 KB); sizes 8 B–1 MB intact; unload refused with sockets open; unload, and autoload on the first Homa socket</td></tr>
+<tr><td>03 wire</td><td>decoded capture: DATA/GRANT/START_MSG/ACK present; short messages and control at priority 7; scheduled data at lower, granted priorities; sw1 used several queues</td></tr>
+<tr><td>04 compare</td><td>Homa vs TCP on W3; both complete; Homa's short-message p99 not worse than 1.5× TCP's (warns if above TCP's)</td></tr>
+<tr><td>05 incast</td><td>bulk saturates h1's port; priority queues help Homa's probes; Homa beats TCP 10× at p50 and 3× at p99; TCP stays in the lowest queue</td></tr>
+<tr><td>06 loss</td><td>1/50 loss: every RPC completes; RESENDs and retransmissions; no timeouts</td></tr>
+<tr><td>07 timers</td><td>default timers cause spurious RESENDs; ×10 timers: no drops, no timeouts, ≥3× fewer RESENDs</td></tr>
+</table>
+<h3>The last run</h3>
+{{results}}
+
+<!-- ================================================================== 15 -->
+<h2 class="page">15. Findings</h2>
+<ol>
+  <li><b>Priority queues do what Homa's design says.</b> With h1's port saturated, Homa's short messages keep near-idle latency when the switch has strict priority queues, and lose an order of magnitude without them. TCP cannot use the queues at all (section 10).</li>
+  <li><b>Homa's timers are tuned for 25–100 Gbit/s.</b> At 1 Gbit/s, SRPT plus strict priority starves parked messages longer than <span class="mono">resend_ticks</span>; the spurious retransmissions overflow the switch and RPCs time out. Timers scaled ×10 remove it (section 12). Anyone running Homa on slower links (or emulating it) should scale <span class="mono">resend_ticks</span>, <span class="mono">resend_interval</span> and <span class="mono">timeout_ticks</span> with the link speed.</li>
+  <li><b>Light load:</b> Homa's short-message tail is about 0.6× TCP's, medians are similar, TCP wins long messages thanks to TSO (section 9).</li>
+  <li><b>Offloads:</b> <span class="mono">max_gso_size=100000</span> makes 1 MB RPCs time out here — consistent with the module's own note that GSO is temporarily broken. With <span class="mono">hijack_tcp=1</span> small RPCs work (p50 141 µs, the same as without it), but 1 MB RPCs time out. The defaults (<span class="mono">hijack_tcp=0</span>, <span class="mono">max_gso_size=1000</span>) are kept; not investigated further.</li>
+  <li><b>The unit tests</b> do not compile against Ubuntu's mainline headers as shipped; with two definitions they all pass (section 16).</li>
+  <li><b>Module lifecycle is clean:</b> it refuses to unload while sockets are open, unloads without residue, and is loaded again automatically by the first protocol-146 socket.</li>
+  <li><b>A malformed request lingers by design.</b> A message shorter than the echo protocol's 8-byte header leaves the server waiting for a reply length it never gets; the client RESENDs, the server answers BUSY, indefinitely, until the client exits. Correct protocol behaviour — the server is "busy" — but a reason every lab command carries a timeout.</li>
+</ol>
+
+<!-- ================================================================== 16 -->
+<h2>16. Lessons learned building it</h2>
+<h3>The host was dropping the lab's packets</h3>
+<p>The first version linked the VMs with QEMU UDP-socket tunnels, as the other labs do. Homa ran, but with thousands of RESENDs and dozens of timeouts and no loss anywhere in the lab — sw1's counters showed no drops, the hosts' interfaces showed no errors. The host's <span class="mono">UdpRcvbufErrors</span> counter rose by 1,641 during one 100-RPC run: QEMU's socket backend leaves the host's default 208 KB receive buffer, about 23 jumbo frames, and Homa's bursts overflowed it. Raising <span class="mono">net.core.rmem_default</span> would have needed root and changed every lab on the host; isolated libvirt bridges fixed it locally and, as a bonus, gave the virtio NICs TSO. 1 MB each way went from 25.8 ms to 15.4 ms (line rate).</p>
+<h3>The unit tests and the distribution headers</h3>
+<p>HomaModule's unit-test harness compiles the module's sources in user space against the kernel headers with mocks. Against the Ubuntu mainline 6.17.8 headers it fails twice: the headers enable the <span class="mono">__seg_gs</span> per-CPU address space, which <span class="mono">mock.h</span>'s plain <span class="mono">current_task</span> declaration conflicts with; and they turn <span class="mono">preempt_count_add/sub</span> into macros, which <span class="mono">mock.c</span> defines as functions. The build adds a header (<span class="mono">test/lab-kconfig.h</span>) included after <span class="mono">kconfig.h</span>:</p>
+<pre>#undef CONFIG_USE_X86_SEG_SUPPORT
+#undef CONFIG_CC_HAS_NAMED_AS
+#define CONFIG_TRACE_PREEMPT_TOGGLE 1</pre>
+<p>— presumably matching the author's own kernel configuration. With it, 840 of 840 pass.</p>
+<h3>Measure the network, not the application</h3>
+<p>The first incast runs showed TCP probes faster than Homa's. Two artefacts: the probes went to the same single-threaded cp_node server as the bulk messages, so they waited in the application; and two senders at ~0.4 Gbit/s each (on the old links) never filled a 1 Gbit/s port, so no queue formed at sw1 at all — the priority queues had nothing to do. Separate probe servers and a port that is actually oversubscribed fixed both. Likewise, running the 48 round-trip tests concurrently produced 27 ms latencies and timeouts — the 2-vCPU hosts were overloaded; one at a time they take 0.2 ms.</p>
+<h3>A switch port sees wire-size frames</h3>
+<p>With TSO on the hosts, sw1's virtio NICs received TCP's 64 KB segments as single "packets" (<span class="mono">rx-gro-hw</span>), so a 200-packet queue held 12 MB of TCP and the counters were meaningless. sw-qos turns off GRO, GSO, TSO and <span class="mono">rx-gro-hw</span> on sw1's ports so the host segments before delivering.</p>
+<h3>Capture where nothing has consumed the packets yet</h3>
+<p>The first traces, taken on h1, showed requests leaving but no responses or GRANTs arriving — yet the RPCs completed. Homa's GRO handler processes many arriving packets itself, ahead of the normal receive path where tcpdump taps: on h1, <span class="mono">gro_grant_bypasses</span> was 24,666 of 35,304 received GRANTs, and <span class="mono">gro_data_bypasses</span> about a fifth of the DATA. The lab captures on sw1 instead. (The dissector also had to use the packet's reported length, not the captured one, to show segment sizes from a 128-byte snaplen.)</p>
+<h3>tshark and AppArmor</h3>
+<p>Ubuntu's AppArmor profile for tshark does not let it read files in <span class="mono">/tmp</span> or a home directory, nor load plugins from <span class="mono">~/.local</span> — it fails with "permission denied" on a file it plainly can read. The lab pipes captures in (<span class="mono">sudo cat x.pcap | tshark -r -</span>) and installs the dissector in the global plugin directory.</p>
+
+<!-- ================================================================== 17 -->
+<h2 class="page">17. Troubleshooting</h2>
+<table>
+<tr><th>symptom</th><th>cause and fix</th></tr>
+<tr><td><span class="mono">lab.sh wait</span> says NOT ready</td><td>still booting: SSH accepts the key but <span class="mono">pam_nologin</span> refuses logins until boot ends. <span class="mono">wait</span> retries for 6 minutes; check <span class="mono">./lab.sh log h1</span>.</td></tr>
+<tr><td><span class="mono">homa_test</span>: <span class="mono">Connection timed out</span></td><td>the peer's server is not running (<span class="mono">systemctl status homa-echo</span>), the module was unloaded, or the message is under 8 bytes (the echo protocol's header).</td></tr>
+<tr><td>a stream of RESEND/BUSY with no test running</td><td>an orphaned client: <span class="mono">./lab.sh exec hosts 'pkill homa_test; pkill -x cp_node'</span> (the standing servers are systemd units and restart).</td></tr>
+<tr><td><span class="mono">modprobe -r homa</span>: in use</td><td>sockets are open — stop the units first: <span class="mono">lab.sh homa unload</span> does it.</td></tr>
+<tr><td>sw1 counters look wrong after a test</td><td>a suite was interrupted before its teardown: <span class="mono">lab.sh qos apply prio 1gbit 200</span>, <span class="mono">lab.sh qos loss eth1 off</span>, and the Homa timers: <span class="mono">lab.sh homa sysctl resend_ticks=5 resend_interval=5 timeout_ticks=100</span>.</td></tr>
+<tr><td>tshark: permission denied</td><td>AppArmor (section 16): <span class="mono">sudo cat file | tshark -r -</span>.</td></tr>
+<tr><td>Robot run waits at the start</td><td>another run holds <span class="mono">/tmp/homa-lab-test.lock</span>.</td></tr>
+<tr><td>changing the module or kernel</td><td>edit <span class="mono">HOMA_COMMIT</span> / <span class="mono">KERNEL_*</span> in lab.conf, <span class="mono">lab.sh down; lab.sh clean; lab.sh image --force; lab.sh up</span>. Never rebuild the image under running overlays.</td></tr>
+</table>
+
+<!-- ================================================================== 18 -->
+<h2>18. What is not built yet</h2>
+<ul>
+  <li>A portal and NMS integration (an exporter for <span class="mono">/proc/net/homa_metrics</span> into Prometheus, a Grafana board); portal port 8108 is reserved.</li>
+  <li>A second kernel track built from the upstream Homa patch series, to compare the stripped upstream version with the full module.</li>
+  <li>The offload investigation: why hijacked and GSO'd large messages time out here.</li>
+  <li>HomaModule's cluster benchmarks (<span class="mono">cp_vs_tcp</span>, <span class="mono">cp_load</span>) adapted to four nodes.</li>
+</ul>
+
+<!-- ================================================================== A -->
+<h2 class="page">Appendix A — reference: lab.sh</h2>
+<pre>{{text:usage}}</pre>
+<h3>tools/homalab.py</h3>
+<pre>{{code:tools/homalab.py:2-12}}</pre>
+
+<h2>Appendix B — sw-qos</h2>
+<pre style="font-size:7.4pt">{{file:image/sw-qos}}</pre>
+
+<h2 class="page">Appendix C — lab.conf and layout</h2>
+<pre style="font-size:7.4pt">{{file:lab.conf}}</pre>
+<h3>Repository layout</h3>
+<pre>lab.conf, lab.sh        source of truth, controller
+networks/               homa-oob, homa-link1..4
+image/                  into the base image: homa-build.sh (builder VM), sw-qos + unit,
+                        homa-prio.service, homa.lua (dissector)
+tools/build_image.sh    builder VM → images/homa-base.qcow2
+tools/homalab.py        every measurement → JSON
+tools/build_walkthrough.py   this document (docs/data/ ← the lab; docs/*.html → PDF)
+tests/                  Robot: suites/01-07, resources/, run.sh, setup.sh
+images/ nodes/ results/ build products, VM disks and seeds, test runs (not in git)</pre>
+
+</body>
+</html>

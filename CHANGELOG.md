@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this lab. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] - 2026-10-13
+### Added
+- Lab walkthrough PDF (`docs/homa-lab-walkthrough.pdf`), built from the live lab by `tools/build_walkthrough.py`
+  (`--refresh` re-collects `docs/data/`).
+### Fixed
+- Captures are taken on sw1's port, not on the receiving host: Homa's GRO handler consumes many arriving GRANT/DATA
+  packets before tcpdump's tap (`gro_*_bypasses`).
+- Dissector: segment length from the reported packet length (was the snaplen); clearer label for the `urgent` marker.
+- `lab.sh verify` shows sw1's bridge port states; `lab.sh homa status` shows link_mbps (the socket count was broken).
+- README: TCP hijacking does not make small RPCs faster (the earlier comparison mixed link types).
+
 ## [0.1.0] - 2026-10-13
 ### Added
 - Four Ubuntu 26.04 hosts on the mainline 6.17.8 kernel with HomaModule `main` @ 65cecd7 (`homa.ko` + `util/`), built

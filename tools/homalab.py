@@ -7,7 +7,7 @@ packet captures and Homa's kernel metrics. Used by lab.sh (verify, bench) and by
   homalab.py compare [--workload w3] [--gbps 0.3] [--seconds 12]      Homa vs TCP, same workload, h1 -> h2..h4
   homalab.py incast [--modes prio,fifo] [--protocols homa,tcp] [--seconds 10]   bulk h2,h3 -> h1 + probes h4 -> h1
   homalab.py loss [--n 50] [--count 300]        drop 1/N on sw1 towards h1; Homa recovers (RESENDs, no failures)
-  homalab.py capture [--seconds 4]              one mixed run captured at h1, decoded (packet types, priorities)
+  homalab.py capture [--seconds 4]              one mixed run into h1, captured on sw1, decoded (types, priorities)
   homalab.py metrics HOST                       /proc/net/homa_metrics summed over cores (JSON)
 Every command prints JSON on stdout (human summary on stderr).
 """
@@ -255,18 +255,22 @@ def loss(n=50, count=300, length=20000, src="h2", dst="h1"):
     return res
 
 
-def capture(seconds=4, host="h1", iface="eth1"):
-    """Capture Homa at `host` while it serves a mix (short + 500 KB messages from two peers); decode with the lab dissector."""
+def capture(seconds=4, host="h1"):
+    """Capture Homa on sw1's port towards `host` (both directions) while `host` serves a mix (short + 500 KB messages from
+    two peers); decode with the lab dissector. Not on the host itself: Homa consumes many arriving GRANT and DATA packets
+    in its GRO handler (gro_*_bypasses), before tcpdump's tap, so a receiver-side capture misses them."""
+    sw = inventory()["switch"]["name"]
+    iface = inventory()["by_name"][host]["sw_port"]
     peers = [h for h in hosts() if h != host][:2]
     f = "/tmp/lab-capture.pcap"
-    run(host, f"sudo rm -f {f}; sudo systemd-run -q --unit lab-capture -p RuntimeMaxSec={seconds + 25} tcpdump -i {iface} -s 128 -w {f} 'ip proto 146 or ip6 proto 146'", check=True)
+    run(sw, f"sudo rm -f {f}; sudo systemd-run -q --unit lab-capture -p RuntimeMaxSec={seconds + 25} tcpdump -i {iface} -s 128 -w {f} 'ip proto 146 or ip6 proto 146'", check=True)
     time.sleep(1.5)
     parallel({peers[0]: (cp_client, peers[0], "homa", 500000, [host], seconds, 0.0, 2, 1, True, 1, "cap_bulk"),
               peers[1]: (cp_client, peers[1], "homa", 100, [host], seconds, 0.0, 1, 1, False, 1, "cap_probe", True)})
     time.sleep(1)
-    run(host, "sudo systemctl stop lab-capture 2>/dev/null; sleep 1")
-    _, out = run(host, f"sudo cat {f} | tshark -r - -T fields -E separator=, -e ip.src -e ip.dst -e ip.dsfield.dscp "
-                       f"-e homa.type_name -e homa.offset -e homa.seg_length -e homa.priority -e homa.msg_length -e homa.retransmit", timeout=300)
+    run(sw, "sudo systemctl stop lab-capture 2>/dev/null; sleep 1")
+    _, out = run(sw, f"sudo cat {f} | tshark -r - -T fields -E separator=, -e ip.src -e ip.dst -e ip.dsfield.dscp "
+                     f"-e homa.type_name -e homa.offset -e homa.seg_length -e homa.priority -e homa.msg_length -e homa.retransmit", timeout=300)
     pk = []
     for line in out.splitlines():
         p = line.split(",")
@@ -286,7 +290,7 @@ def capture(seconds=4, host="h1", iface="eth1"):
            "priorities": {"short_data": pr(short), "long_first_packet": pr(long_unsched), "long_scheduled_data": pr(long_sched),
                           "grants_carry": sorted({x["grant_prio"] for x in grants if x["grant_prio"] is not None}), "control": pr([x for x in pk if x["type"] != "DATA"])},
            "data_packets": len(data), "retransmitted": sum(x["retransmit"] for x in data)}
-    log(f"  {len(pk)} Homa packets at {host}: " + ", ".join(f"{k} {v}" for k, v in sorted(types.items(), key=lambda kv: -kv[1])))
+    log(f"  {len(pk)} Homa packets on sw1 {iface} (to and from {host}): " + ", ".join(f"{k} {v}" for k, v in sorted(types.items(), key=lambda kv: -kv[1])))
     log(f"  priorities on the wire: {res['priorities']}")
     return res
 

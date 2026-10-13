@@ -14,7 +14,7 @@ local f = {
   type_name = ProtoField.string("homa.type_name", "Type name"),
   doff      = ProtoField.uint8("homa.doff", "Data offset (4-byte words, high nibble)", base.HEX),
   flags     = ProtoField.uint8("homa.flags", "Flags", base.HEX),
-  urgent    = ProtoField.uint16("homa.urgent", "Urgent (0xb97d = TCP hijack)", base.HEX),
+  urgent    = ProtoField.uint16("homa.urgent", "Urgent (0xb97d: Homa's marker for TCP-hijacked packets; always set)", base.HEX),
   sender_id = ProtoField.uint64("homa.sender_id", "Sender RPC id"),
   rpc_id    = ProtoField.uint64("homa.rpc_id", "RPC id (client's)"),
   from_client = ProtoField.bool("homa.from_client", "Sent by the client"),
@@ -52,8 +52,8 @@ function homa.dissector(tvb, pinfo, tree)
   if t == 0x10 and tvb:len() >= 56 then
     st:add(f.msg_length, tvb(28, 4)); st:add(f.ack_client_id, tvb(36, 8)); st:add(f.ack_server_port, tvb(44, 2))
     st:add(f.cutoff_version, tvb(46, 2)); st:add(f.retransmit, tvb(48, 1)); st:add(f.offset, tvb(52, 4))
-    st:add(f.seg_length, tvb:len() - 56):set_generated()
-    info = info .. string.format(" off=%d len=%d msg=%d%s", tvb(52, 4):uint(), tvb:len() - 56, tvb(28, 4):uint(), tvb(48, 1):uint() ~= 0 and " RETRANSMIT" or "")
+    st:add(f.seg_length, tvb:reported_len() - 56):set_generated()   -- reported, not captured (snaplen)
+    info = info .. string.format(" off=%d len=%d msg=%d%s", tvb(52, 4):uint(), tvb:reported_len() - 56, tvb(28, 4):uint(), tvb(48, 1):uint() ~= 0 and " RETRANSMIT" or "")
   elseif t == 0x11 and tvb:len() >= 33 then
     st:add(f.offset, tvb(28, 4)); st:add(f.priority, tvb(32, 1))
     info = info .. string.format(" granted=%d prio=%d", tvb(28, 4):uint(), tvb(32, 1):uint())

@@ -1,0 +1,45 @@
+{
+ "drop_one_in": 50,
+ "port": "eth1",
+ "rtt": {
+  "src": "h2",
+  "dst": "h1",
+  "ipv6": false,
+  "length": 20000,
+  "count": 300,
+  "rc": 0,
+  "errors": [],
+  "min": 224.66,
+  "p10": 261.45,
+  "p20": 270.92,
+  "p30": 282.0,
+  "p40": 289.65,
+  "p50": 299.12,
+  "p60": 307.62,
+  "p70": 319.63,
+  "p80": 330.53,
+  "p90": 360.4,
+  "max": 5632.17,
+  "avg": 609.0,
+  "ok": true
+ },
+ "metrics": {
+  "h2": {
+   "packets_sent_RESEND": 19,
+   "packets_rcvd_RESEND": 19,
+   "resent_packets": 20,
+   "rpc_timeouts": 0,
+   "packets_sent_DATA": 950,
+   "packets_sent_NEED_ACK": 0
+  },
+  "h1": {
+   "packets_sent_RESEND": 19,
+   "packets_rcvd_RESEND": 19,
+   "resent_packets": 0,
+   "rpc_timeouts": 0,
+   "packets_sent_DATA": 930,
+   "packets_sent_NEED_ACK": 9
+  }
+ },
+ "sw_filter": "0p\n Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\nqdisc pfifo 24: parent 10:4 limit 200p\n Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\nqdisc pfifo 28: parent 10:8 limit 200p\n Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\nqdisc clsact ffff: parent ffff:fff1 \n Sent 19253577 bytes 2916 pkt (dropped 56, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\n\taction order 1: gact action pass\n\t random type netrand drop val 50\n\tSent 6425723 bytes 978 pkt (dropped 20, overlimits 0 requeues 0) \n"
+}

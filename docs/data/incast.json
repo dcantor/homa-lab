@@ -1,0 +1,109 @@
+{
+ "target": "h1",
+ "bulk_senders": [
+  "h2",
+  "h3"
+ ],
+ "prober": "h4",
+ "bulk_size": 500000,
+ "probe_size": 100,
+ "rate_mbit": 1000,
+ "seconds": 10,
+ "runs": [
+  {
+   "mode": "prio",
+   "protocol": "homa",
+   "probe_idle": {
+    "n": 21545,
+    "p50": 133.8,
+    "p99": 221.4,
+    "p99.9": 951.1,
+    "mean": 139.4
+   },
+   "probe_loaded": {
+    "n": 25957,
+    "p50": 309.4,
+    "p99": 1534.5,
+    "p99.9": 4996.9,
+    "mean": 386.3
+   },
+   "bulk_mbit": 967.3,
+   "sw_drops": 8114,
+   "sw_band_packets": {
+    "7": 54883,
+    "6": 167907,
+    "5": 1801,
+    "4": 464,
+    "3": 136,
+    "2": 13,
+    "1": 54,
+    "0": 502
+   }
+  },
+  {
+   "mode": "prio",
+   "protocol": "tcp",
+   "probe_idle": {
+    "n": 14835,
+    "p50": 182.0,
+    "p99": 484.2,
+    "p99.9": 1228.0,
+    "mean": 202.6
+   },
+   "probe_loaded": {
+    "n": 770,
+    "p50": 13025.6,
+    "p99": 21800.4,
+    "p99.9": 41301.6,
+    "mean": 13013.9
+   },
+   "bulk_mbit": 988.7,
+   "sw_drops": 58,
+   "sw_band_packets": {
+    "0": 180131
+   }
+  },
+  {
+   "mode": "fifo",
+   "protocol": "homa",
+   "probe_idle": {
+    "n": 17110,
+    "p50": 149.9,
+    "p99": 566.3,
+    "p99.9": 1504.4,
+    "mean": 175.6
+   },
+   "probe_loaded": {
+    "n": 3272,
+    "p50": 2991.4,
+    "p99": 6070.0,
+    "p99.9": 15913.2,
+    "mean": 3062.9
+   },
+   "bulk_mbit": 979.7,
+   "sw_drops": 0,
+   "sw_band_packets": {}
+  },
+  {
+   "mode": "fifo",
+   "protocol": "tcp",
+   "probe_idle": {
+    "n": 20014,
+    "p50": 141.5,
+    "p99": 285.4,
+    "p99.9": 709.6,
+    "mean": 150.1
+   },
+   "probe_loaded": {
+    "n": 331,
+    "p50": 30254.5,
+    "p99": 38386.8,
+    "p99.9": 49383.0,
+    "mean": 30280.3
+   },
+   "bulk_mbit": 986.7,
+   "sw_drops": 0,
+   "sw_band_packets": {}
+  }
+ ]
+}
