@@ -5,6 +5,8 @@ All notable changes to this lab. Format: [Keep a Changelog](https://keepachangel
 ### Added
 - Lab walkthrough PDF (`docs/homa-lab-walkthrough.pdf`), built from the live lab by `tools/build_walkthrough.py`
   (`--refresh` re-collects `docs/data/`).
+- Slide deck `docs/homa-lab.pptx` (22 slides, speaker notes, native charts and tables from `docs/data/`), built by
+  `docs/build_deck.py` with `docs/decklib.py` (from srv6-core); `docs/homa-lab-deck-preview.html` is its HTML replica.
 - Walkthrough section 2, "Homa for dummies": the protocol in plain language, its benefits and drawbacks, TCP vs Homa.
 ### Fixed
 - Walkthrough: unscheduled data described as in the current module (only messages up to unsched_bytes; longer ones

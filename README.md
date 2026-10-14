@@ -105,6 +105,9 @@ the global plugin directory for the same reason.
 of the lab coming up, one RPC on the wire, sw1's queues, Homa vs TCP, incast, loss and the timers, with the tests and
 findings. Rebuild it with `tests/.venv/bin/python tools/build_walkthrough.py [--refresh]` (`--refresh` re-measures, ~5 min).
 
+Slides: `docs/homa-lab.pptx` (22 slides with speaker notes, the same data), rebuilt by
+`~/cat8000v-ipsec/webapp/.venv/bin/python docs/build_deck.py` (any Python with python-pptx and Pillow).
+
 ## Layout
 `lab.conf` (source of truth) · `lab.sh` · `networks/` · `image/` (builder script, sw-qos, services, dissector) ·
 `tools/build_image.sh`, `tools/homalab.py` (all measurements; JSON out) · `tests/` (Robot; `tests/resources/HomaLab.py`
