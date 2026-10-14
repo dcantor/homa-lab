@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>homa-lab portal</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='6' width='24' height='4' rx='1' fill='%237c3aed'/%3E%3Crect x='4' y='14' width='16' height='4' rx='1' fill='%23a78bfa'/%3E%3Crect x='4' y='22' width='8' height='4' rx='1' fill='%23c4b5fd'/%3E%3C/svg%3E">
+<style>
+:root { --bg:#f6f7f9; --panel:#fff; --ink:#1f2937; --mute:#6b7280; --line:#e5e7eb; --edge:#cbd5e1;
+  --ok:#16a34a; --warn:#d97706; --bad:#dc2626; --off:#9ca3af; --accent:#2563eb; --code:#f3f4f6; --okbg:#dcfce7; --badbg:#fee2e2;
+  --homa:#7c3aed; --homabg:#ede9fe; --tcp:#0891b2; --wire:#94a3b8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0f141b; --panel:#161d27; --ink:#e5e7eb; --mute:#94a3b8;
+  --line:#253041; --edge:#334155; --ok:#22c55e; --warn:#f59e0b; --bad:#f87171; --off:#64748b; --accent:#60a5fa; --code:#0b1017; --okbg:#12301f; --badbg:#3a1618;
+  --homa:#a78bfa; --homabg:#2a2140; --tcp:#22d3ee; --wire:#475569; } }
+:root[data-theme="dark"] { --bg:#0f141b; --panel:#161d27; --ink:#e5e7eb; --mute:#94a3b8; --line:#253041; --edge:#334155;
+  --ok:#22c55e; --warn:#f59e0b; --bad:#f87171; --off:#64748b; --accent:#60a5fa; --code:#0b1017; --okbg:#12301f; --badbg:#3a1618;
+  --homa:#a78bfa; --homabg:#2a2140; --tcp:#22d3ee; --wire:#475569; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--panel); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+header h1 { font-size:16px; margin:0; } header .sub { color:var(--mute); } header .right { margin-left:auto; color:var(--mute); display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+a { color:var(--accent); }
+main { display:grid; grid-template-columns: minmax(0, 1fr) 480px; gap:16px; padding:16px; max-width:1500px; margin:0 auto; }
+@media (max-width: 1150px) { main { grid-template-columns: minmax(0, 1fr); } }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; min-width:0; }
+.card h2 { font-size:14px; margin:0 0 10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.card h2 .end { margin-left:auto; }
+.stack > * + * { margin-top:16px; }
+.pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; border:1px solid var(--line); color:var(--mute); white-space:nowrap; }
+.pill.ok { color:var(--ok); border-color:var(--ok); } .pill.bad { color:var(--bad); border-color:var(--bad); } .pill.warn { color:var(--warn); border-color:var(--warn); }
+.pill.accent { color:var(--accent); border-color:var(--accent); }
+.mute { color:var(--mute); } .small { font-size:12px; } .bad { color:var(--bad); } .okc { color:var(--ok); }
+table { border-collapse:collapse; width:100%; font-size:13px; } th, td { text-align:left; padding:5px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--mute); font-weight:500; } td.num, th.num { text-align:right; font-variant-numeric: tabular-nums; white-space:nowrap; }
+pre { background:var(--code); border:1px solid var(--line); border-radius:6px; padding:10px; overflow:auto; max-height:320px; font-size:12px; margin:8px 0 0; white-space:pre-wrap; }
+button, select { font:inherit; color:var(--ink); background:var(--panel); border:1px solid var(--edge); border-radius:6px; padding:5px 10px; }
+button { cursor:pointer; } button.primary { background:var(--accent); border-color:var(--accent); color:#fff; } button:disabled { opacity:.5; cursor:default; }
+button.sm { padding:2px 8px; font-size:12px; }
+.row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.scroll { overflow-x:auto; }
+.seg { display:inline-flex; border:1px solid var(--edge); border-radius:6px; overflow:hidden; } .seg button { border:0; border-radius:0; border-right:1px solid var(--edge); padding:3px 9px; font-size:12px; }
+.seg button:last-child { border-right:0; } .seg button.on { background:var(--accent); color:#fff; }
+.steps { list-style:none; padding:0; margin:6px 0 0; } .steps li { padding:2px 0; } .steps .st { display:inline-block; width:62px; }
+.st.success { color:var(--ok); } .st.failed { color:var(--bad); } .st.running { color:var(--accent); } .st.pending, .st.skipped { color:var(--mute); }
+code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; }
+svg { display:block; width:100%; height:auto; } #topo { min-width:620px; }
+.q td:first-child { white-space:nowrap; }
+svg text { fill:var(--ink); font-size:13px; } svg .sm { fill:var(--mute); font-size:11px; } svg .b { font-weight:600; }
+svg .box { fill:var(--panel); stroke:var(--edge); stroke-width:1.5; } svg .box.sw { fill:var(--homabg); stroke:var(--homa); }
+svg .box.down { stroke:var(--bad); stroke-dasharray:4 3; }
+svg .wire { stroke:var(--wire); stroke-linecap:round; fill:none; } svg .rate { fill:var(--homa); font-weight:600; font-size:12px; } svg .drop { fill:var(--bad); font-size:11px; font-weight:600; }
+/* the queue grid: one cell per (port, band); a bar inside shows packets/s on a log scale */
+.q td.cell { position:relative; padding:4px 5px; min-width:56px; }
+.q td.cell i { position:absolute; left:0; bottom:0; height:4px; background:var(--homa); border-radius:0 2px 2px 0; }
+.q td.cell.drops { box-shadow: inset 0 -2px 0 var(--bad); }
+.q th.band { text-align:right; }
+.legend { display:flex; gap:14px; flex-wrap:wrap; color:var(--mute); font-size:12px; margin-top:8px; }
+.kv { display:grid; grid-template-columns: max-content 1fr; gap:2px 12px; font-size:13px; } .kv b { font-weight:500; color:var(--mute); }
+.bres { margin-top:10px; } .bres h3 { font-size:13px; margin:12px 0 4px; display:flex; gap:8px; align-items:baseline; }
+.tag { font-size:11px; padding:0 6px; border-radius:4px; background:var(--code); color:var(--mute); }
+</style>
+</head>
+<body>
+<header>
+  <h1>homa-lab</h1><span class="sub">the Homa transport protocol kernel module, four hosts and a priority-queue switch</span>
+  <span class="pill" id="ver"></span>
+  <div class="right">
+    <span id="upPill" class="pill">…</span><span id="busyPill" class="pill accent" style="display:none">run going</span>
+    <a href="https://github.com/dcantor/homa-lab" target="_blank" rel="noopener">GitHub ↗</a>
+    <a href="/docs">API</a><a id="hubLink">Lab Hub</a>
+  </div>
+</header>
+<main>
+  <div class="stack">
+    <section class="card">
+      <h2>Topology <span class="mute small">— live traffic sw1 sends towards each host, and its drops</span></h2>
+      <div class="scroll"><svg id="topo" viewBox="0 0 760 300" aria-label="topology"></svg></div>
+    </section>
+
+    <section class="card">
+      <h2>sw1 egress queues <span class="mute small" id="swMode"></span>
+        <span class="end row small"><span class="mute">policy</span><span class="seg" id="qosSeg"><button data-m="prio">8 priorities</button><button data-m="fifo">one FIFO</button><button data-m="off">off</button></span></span></h2>
+      <div class="scroll"><table class="q" id="queues"></table></div>
+      <div class="legend"><span>packets/s per queue, band 7 = highest priority (Homa's short messages and control)</span>
+        <span><span class="bad">red</span> underline: the queue dropped packets in the last interval</span></div>
+      <p class="mute small" style="margin:8px 0 0">Each host port at sw1 is shaped to the bottleneck rate, then split into queues by the top 3 bits of DSCP / traffic class — where Homa writes its priority. TCP marks everything 0. Switching the policy here changes all four ports.</p>
+    </section>
+
+    <section class="card">
+      <h2>Homa on each host <span class="mute small">— /proc/net/homa_metrics, per second</span></h2>
+      <div class="scroll"><table id="homa"></table></div>
+      <div class="scroll" style="margin-top:10px"><table id="prio"></table></div>
+      <p class="mute small" style="margin:8px 0 0">RESENDs and timeouts are the ones to watch: under incast with the default timers they climb (the timer finding); with ×10 timers they stay low.</p>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section class="card">
+      <h2>Resend timers <span class="end seg small" id="timerSeg"><button data-p="default">module default</button><button data-p="x10">×10</button></span></h2>
+      <div id="timers" class="small"></div>
+      <p class="mute small" style="margin:8px 0 0">The module's defaults assume 25–100 Gbit/s. At this lab's 1 Gbit/s, data parked in a low-priority queue looks lost after 5 ms and gets re-requested; ×10 stops the spurious RESENDs (suite 07).</p>
+    </section>
+
+    <section class="card">
+      <h2>Measurements</h2>
+      <div class="row" id="benchBtns"></div>
+      <div id="bres" class="bres"></div>
+    </section>
+
+    <section class="card">
+      <h2>Runs</h2>
+      <div class="row">
+        <button class="primary" data-run="verify">Verify</button>
+        <button data-run="test">Tests (all, ~4 min)</button>
+        <select id="suite"></select><button data-run="suite">Run suite</button>
+      </div>
+      <div id="run" class="small" style="margin-top:8px"></div>
+    </section>
+
+    <section class="card">
+      <h2>Last tests <span id="tests" class="mute small"></span><span class="end small"><a href="/report/report.html" target="_blank">report</a> · <a href="/report/log.html" target="_blank">log</a></span></h2>
+      <table id="suites"></table>
+    </section>
+
+    <section class="card">
+      <h2>Nodes</h2>
+      <div class="scroll"><table id="nodes"></table></div>
+    </section>
+  </div>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+async function api(p) { const r = await fetch(p); if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText); return r.json(); }
+async function post(p, b) { const r = await fetch(p, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(b)});
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.detail || r.statusText); return j; }
+const HOSTS = ['h1', 'h2', 'h3', 'h4'], BANDS = ['7', '6', '5', '4', '3', '2', '1', '0'];
+const fmt = (x, d = 0) => x == null || isNaN(x) ? '–' : x >= 1e6 ? (x / 1e6).toFixed(1) + 'M' : x >= 1e4 ? (x / 1e3).toFixed(1) + 'k' : x.toFixed(d);
+const us = x => x == null ? '–' : x >= 1000 ? (x / 1000).toFixed(2) + ' ms' : Math.round(x) + ' µs';
+let LAB = null, ST = null, PREV = null, CUR = null, RUN = null, runSince = 0;
+
+async function init() {
+  $('#hubLink').href = `${location.protocol}//${location.hostname}:8088/`;
+  LAB = await api('/api/lab');
+  $('#ver').textContent = `v${LAB.version}`;
+  $('#suite').innerHTML = LAB.suites.map(s => `<option>${esc(s)}</option>`).join('');
+  $('#benchBtns').innerHTML = Object.entries(LAB.bench).map(([k, v]) => `<button data-bench="${k}" title="${esc(v)}">${k}</button>`).join('');
+  document.querySelectorAll('[data-bench]').forEach(b => b.onclick = () => startRun('bench', {kind: b.dataset.bench}));
+  document.querySelectorAll('[data-run]').forEach(b => b.onclick = () => b.dataset.run === 'suite' ? startRun('test', {suite: $('#suite').value}) : startRun(b.dataset.run, {}));
+  document.querySelectorAll('#qosSeg button').forEach(b => b.onclick = () => act('/api/qos', {mode: b.dataset.m}));
+  document.querySelectorAll('#timerSeg button').forEach(b => b.onclick = () => act('/api/timers', {preset: b.dataset.p}));
+  await refresh(); setInterval(refresh, 10000);
+  tick(); setInterval(tick, 2000);
+  const runs = await api('/api/runs').catch(() => []);
+  if (runs.length) { RUN = runs[0]; runSince = 0; RUN.log = []; pollRun(); }
+}
+
+async function act(path, body) {
+  try { await post(path, body); PREV = null; await tick(); }
+  catch (e) { alert(e.message); }
+}
+
+async function refresh() {         // the slow part: nodes, tests, last benchmark results
+  try { ST = await api('/api/state'); } catch (e) { $('#upPill').textContent = 'portal error'; return; }
+  const run = ST.nodes.filter(n => n.state === 'running').length;
+  $('#upPill').textContent = `${run}/${ST.nodes.length} VMs running`; $('#upPill').className = 'pill ' + (run === ST.nodes.length ? 'ok' : run ? 'warn' : 'bad');
+  $('#busyPill').style.display = ST.busy ? '' : 'none';
+  $('#nodes').innerHTML = '<tr><th>node</th><th>role</th><th>state</th><th>OOB</th><th>data</th><th>VM</th></tr>' + ST.nodes.map(n =>
+    `<tr><td>${esc(n.node)}</td><td>${esc(n.role)}</td><td class="${n.state === 'running' ? 'okc' : 'bad'}">${esc(n.state)}</td><td class="mono">${esc(n.mgmt)}</td><td class="mono">${esc(n.data)}</td><td class="mono">${esc(n.vm)}</td></tr>`).join('');
+  const t = ST.tests;
+  $('#tests').innerHTML = t ? `<span class="${t.failed ? 'bad' : 'okc'}">${t.passed}/${t.total} passed</span> · ${esc(t.when)}` : 'none yet';
+  $('#suites').innerHTML = t && t.suites ? '<tr><th>suite</th><th class="num">tests</th><th>status</th></tr>' + t.suites.map(s =>
+    `<tr><td>${esc(s.name)}</td><td class="num">${s.passed}/${s.tests.length}</td><td class="${s.failed ? 'bad' : 'okc'}">${s.failed ? s.tests.filter(x => x.status === 'FAIL').map(x => esc(x.name)).join('; ') : 'PASS'}</td></tr>`).join('') : '';
+  renderBench();
+  if (!ST.up) { $('#topo').innerHTML = '<text x="20" y="40" class="sm">The lab is off: power it on from the Lab Hub.</text>'; }
+}
+
+async function tick() {            // the live part, every 2 s: rates from the difference between two samples
+  if (ST && !ST.up) return;
+  let v; try { v = await api('/api/live'); } catch (e) { return; }
+  PREV = CUR && CUR.at !== v.at ? CUR : PREV; CUR = v;
+  renderLive();
+}
+
+function rate(get) {
+  if (!PREV || !CUR) return null;
+  const dt = CUR.at - PREV.at; if (dt <= 0) return null;
+  const a = get(CUR), b = get(PREV); return a == null || b == null ? null : Math.max(0, (a - b) / dt);
+}
+
+function renderLive() {
+  const sw = CUR.sw1 || {}, ports = Object.keys(sw).filter(k => k.startsWith('eth')).sort();
+  const mode = ports.length ? sw[ports[0]].mode : null;
+  $('#swMode').textContent = sw.error ? `sw1: ${sw.error}` : mode ? `— policy: ${mode}` : '';
+  document.querySelectorAll('#qosSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
+  // queues
+  const cells = [];
+  for (const p of ports) {
+    const row = BANDS.map(b => {
+      const pk = rate(s => s.sw1?.[p]?.prio?.[b]?.packets), dr = rate(s => s.sw1?.[p]?.prio?.[b]?.drops);
+      const w = pk ? Math.min(100, Math.log10(1 + pk) / 5 * 100) : 0;
+      return `<td class="cell num${dr ? ' drops' : ''}" title="band ${b}: ${fmt(pk, 1)} packets/s, ${fmt(dr, 1)} drops/s">${pk ? fmt(pk) : '<span class="mute">·</span>'}${dr ? ` <span class="bad">−${fmt(dr)}</span>` : ''}<i style="width:${w}%"></i></td>`;
+    }).join('');
+    const mbit = rate(s => s.sw1?.[p]?.total?.bytes);
+    cells.push(`<tr><td><b>${esc(p)}</b> <span class="mute small">→ ${hostOf(p)}</span></td>${mode === 'prio' ? row : `<td colspan="8" class="mute small">${mode === 'fifo' ? 'one FIFO queue' : 'no shaping, no queues'} — ${fmt(rate(s => s.sw1?.[p]?.total?.packets))} packets/s</td>`}<td class="num">${mbit == null ? '–' : (mbit * 8 / 1e6).toFixed(1)}</td><td class="num">${esc(sw[p]?.total?.drops ?? '–')}</td></tr>`);
+  }
+  $('#queues').innerHTML = `<tr><th>port</th>${mode === 'prio' ? BANDS.map(b => `<th class="num band">${b}</th>`).join('') : '<th colspan="8"></th>'}<th class="num">Mbit/s</th><th class="num">drops (total)</th></tr>` + cells.join('');
+  // hosts
+  const H = CUR.hosts, cols = [['DATA out/s', 'packets_sent_DATA'], ['DATA in/s', 'packets_rcvd_DATA'], ['GRANT out/s', 'packets_sent_GRANT'],
+    ['RESEND out/s', 'packets_sent_RESEND'], ['retransmitted/s', 'resent_packets'], ['RPCs done/s', null]];
+  $('#homa').innerHTML = `<tr><th>host</th><th>module</th>${cols.map(c => `<th class="num">${c[0]}</th>`).join('')}<th class="num">timeouts (total)</th></tr>` + HOSTS.map(h => {
+    const s = H[h] || {}; if (!s.up) return `<tr><td>${h}</td><td class="bad" colspan="8">unreachable</td></tr>`;
+    const v = cols.map(([_, k]) => k ? rate(x => x.hosts[h]?.counters?.[k]) : rate(x => (x.hosts[h]?.counters?.client_requests_done ?? 0) + (x.hosts[h]?.counters?.server_requests_done ?? 0)));
+    const warn = i => (i === 3 || i === 4) && v[i] >= 0.5 ? ' class="num bad"' : ' class="num"';
+    return `<tr><td><b>${h}</b></td><td class="${s.homa ? 'okc' : 'bad'}">${s.homa ? 'loaded' : 'NOT loaded'}</td>${v.map((x, i) => `<td${warn(i)}>${fmt(x)}</td>`).join('')}<td class="num${s.counters.rpc_timeouts ? ' bad' : ''}">${fmt(s.counters.rpc_timeouts)}</td></tr>`;
+  }).join('');
+  $('#prio').innerHTML = `<tr><th>packets sent by priority /s</th>${BANDS.map(b => `<th class="num">${b}</th>`).join('')}</tr>` + HOSTS.map(h =>
+    `<tr><td>${h}</td>${BANDS.map(b => { const x = rate(s => s.hosts[h]?.counters?.[`priority${b}_packets`]); return `<td class="num">${x ? fmt(x) : '<span class="mute">·</span>'}</td>`; }).join('')}</tr>`).join('');
+  // timers
+  const t = H.h1?.timers || {}, same = HOSTS.every(h => JSON.stringify(H[h]?.timers) === JSON.stringify(t));
+  const preset = Object.entries(LAB.timers).find(([_, v]) => Object.entries(v).every(([k, x]) => t[k] === x))?.[0];
+  document.querySelectorAll('#timerSeg button').forEach(b => b.classList.toggle('on', b.dataset.p === preset && same));
+  $('#timers').innerHTML = `<div class="kv"><b>resend_ticks</b><span>${t.resend_ticks ?? '–'} ms of silence before asking for data again</span>
+    <b>resend_interval</b><span>${t.resend_interval ?? '–'} ms between RESENDs</span><b>timeout_ticks</b><span>${t.timeout_ticks ?? '–'} ms before the RPC is given up</span>
+    <b>link_mbps</b><span>${H.h1?.link_mbps ?? '–'} (the pacer's and grants' idea of the bottleneck)</span></div>${same ? '' : '<p class="bad">the hosts disagree — set a preset</p>'}`;
+  drawTopo(ports);
+}
+
+function hostOf(port) { return LAB?.inventory?.hosts?.find(h => h.sw_port === port)?.name || '?'; }
+
+function drawTopo(ports) {
+  const sw = {x: 330, y: 125, w: 100, h: 50}, pos = {h1: [20, 30], h2: [20, 210], h3: [590, 30], h4: [590, 210]};
+  let g = '';
+  for (const h of HOSTS) {
+    const [x, y] = pos[h], port = LAB.inventory.hosts.find(z => z.name === h)?.sw_port, s = CUR.hosts[h] || {};
+    const bps = rate(v => v.sw1?.[port]?.total?.bytes), drops = rate(v => v.sw1?.[port]?.total?.drops);
+    const mbit = bps == null ? null : bps * 8 / 1e6, width = 2 + Math.min(10, (mbit || 0) / 100);
+    const hx = x < 300 ? x + 150 : x, hy = y + 30, sx = x < 300 ? sw.x : sw.x + sw.w, sy = sw.y + (y < 100 ? 12 : 38);
+    g += `<path class="wire" d="M${hx} ${hy} C ${(hx + sx) / 2} ${hy}, ${(hx + sx) / 2} ${sy}, ${sx} ${sy}" stroke-width="${width}"/>`;
+    const lx = (hx + sx) / 2, ly = y < 100 ? hy - 8 : hy + 22;
+    g += `<text x="${lx}" y="${ly}" text-anchor="middle" class="rate">${mbit == null ? '' : mbit.toFixed(mbit < 10 ? 1 : 0) + ' Mbit/s → ' + h}</text>`;
+    if (drops) g += `<text x="${lx}" y="${ly + 14}" text-anchor="middle" class="drop">${fmt(drops)} drops/s</text>`;
+    g += `<text x="${x < 300 ? sx - 6 : sx + 6}" y="${sy - 4}" text-anchor="${x < 300 ? 'end' : 'start'}" class="sm">${esc(port || '')}</text>`;
+    g += `<rect class="box${s.up && s.homa ? '' : ' down'}" x="${x}" y="${y}" width="150" height="60" rx="8"/>`;
+    g += `<text x="${x + 10}" y="${y + 20}" class="b">${h}</text><text x="${x + 140}" y="${y + 20}" text-anchor="end" class="sm">${s.up ? (s.homa ? 'homa.ko' : 'no homa') : 'down'}</text>`;
+    const ip = LAB.inventory.hosts.find(z => z.name === h)?.ip || '';
+    g += `<text x="${x + 10}" y="${y + 38}" class="sm">${esc(ip)}</text><text x="${x + 10}" y="${y + 52}" class="sm">${s.link_mbps ?? '–'} Mbit/s · resend ${s.timers?.resend_ticks ?? '–'} ms</text>`;
+  }
+  const mode = CUR.sw1?.[ports[0]]?.mode;
+  g += `<rect class="box sw" x="${sw.x}" y="${sw.y}" width="${sw.w}" height="${sw.h}" rx="8"/><text x="${sw.x + 50}" y="${sw.y + 22}" text-anchor="middle" class="b">sw1</text>`;
+  g += `<text x="${sw.x + 50}" y="${sw.y + 39}" text-anchor="middle" class="sm">${esc(mode === 'prio' ? '8 priorities' : mode || '')}</text>`;
+  $('#topo').innerHTML = g;
+}
+
+// ---- measurements ----------------------------------------------------------------------------------------------------
+function renderBench() {
+  const B = ST.bench || {}, out = [];
+  const when = b => `<span class="tag">${esc(new Date(b.finished * 1000).toLocaleString())}</span>`;
+  if (B.incast) {
+    const r = B.incast.result;
+    out.push(`<h3>incast ${when(B.incast)}</h3><div class="mute small">${r.bulk_senders.join(', ')} send ${r.bulk_size / 1000} KB messages to ${r.target} through a ${r.rate_mbit} Mbit/s port; ${r.prober} probes with ${r.probe_size} B</div>
+      <table><tr><th>sw1</th><th>protocol</th><th class="num">idle p50</th><th class="num">loaded p50</th><th class="num">loaded p99</th><th class="num">sw1 drops</th></tr>` +
+      r.runs.map(x => `<tr><td>${esc(x.mode)}</td><td style="color:var(--${x.protocol})">${esc(x.protocol)}</td><td class="num">${us(x.probe_idle.p50)}</td><td class="num"><b>${us(x.probe_loaded.p50)}</b></td><td class="num">${us(x.probe_loaded.p99)}</td><td class="num">${fmt(x.sw_drops)}</td></tr>`).join('') + '</table>');
+  }
+  if (B.compare) {
+    const r = B.compare.result, cl = Object.keys(r.homa.rtt_us).filter(k => k !== 'all');
+    out.push(`<h3>compare ${when(B.compare)}</h3><div class="mute small">${esc(r.workload)} workload at ${r.gbps} Gbit/s from ${r.client}; RPC round trip by message size</div>
+      <table><tr><th>size</th><th class="num">Homa p50</th><th class="num">Homa p99</th><th class="num">TCP p50</th><th class="num">TCP p99</th></tr>` +
+      [...cl, 'all'].map(k => `<tr><td>${esc(k)}</td><td class="num">${us(r.homa.rtt_us[k]?.p50)}</td><td class="num">${us(r.homa.rtt_us[k]?.p99)}</td><td class="num">${us(r.tcp.rtt_us[k]?.p50)}</td><td class="num">${us(r.tcp.rtt_us[k]?.p99)}</td></tr>`).join('') + '</table>');
+  }
+  if (B.loss) {
+    const r = B.loss.result, m = Object.entries(r.metrics);
+    out.push(`<h3>loss ${when(B.loss)}</h3><div class="small">1 in ${r.drop_one_in} dropped at sw1 ${esc(r.port)}: ${r.rtt.count} RPCs of ${r.rtt.length / 1000} KB <b class="${r.rtt.ok ? 'okc' : 'bad'}">${r.rtt.ok ? 'all completed' : 'FAILED'}</b>, p50 ${us(r.rtt.p50)}, p90 ${us(r.rtt.p90)}, max ${us(r.rtt.max)}</div>
+      <table><tr><th>host</th><th class="num">RESENDs sent</th><th class="num">packets resent</th><th class="num">timeouts</th></tr>` +
+      m.map(([h, v]) => `<tr><td>${h}</td><td class="num">${v.packets_sent_RESEND}</td><td class="num">${v.resent_packets}</td><td class="num">${v.rpc_timeouts}</td></tr>`).join('') + '</table>');
+  }
+  if (B.capture) {
+    const r = B.capture.result;
+    out.push(`<h3>capture ${when(B.capture)}</h3><div class="small">${r.packets} Homa packets: ${Object.entries(r.types).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${esc(k)} ${v}`).join(', ')}</div>
+      <table>${Object.entries(r.priorities).map(([k, v]) => `<tr><td>${esc(k.replace(/_/g, ' '))}</td><td class="mono">priority ${v.join(', ') || '–'}</td></tr>`).join('')}</table>`);
+  }
+  if (B.matrix) {
+    const r = B.matrix.result;
+    out.push(`<h3>matrix ${when(B.matrix)}</h3><div class="small"><b class="${r.ok ? 'okc' : 'bad'}">${r.passed}/${r.total}</b> round trips ok; median 100 B v4 ${us(med(r.results.filter(x => x.length === 100 && !x.ipv6).map(x => x.p50)))}, 100 KB v4 ${us(med(r.results.filter(x => x.length === 100000 && !x.ipv6).map(x => x.p50)))}</div>`);
+  }
+  $('#bres').innerHTML = out.join('') || '<p class="mute small">No measurements from the portal yet. Each button runs one (they take 10 s to 1.5 min) and changes sw1 and the timers while it runs.</p>';
+}
+const med = xs => { xs = xs.filter(x => x != null).sort((a, b) => a - b); return xs.length ? xs[Math.floor(xs.length / 2)] : null; };
+
+// ---- runs ------------------------------------------------------------------------------------------------------------
+async function startRun(mode, options) {
+  try { RUN = await post('/api/runs', {mode, options}); runSince = 0; RUN.log = []; pollRun(); }
+  catch (e) { $('#run').textContent = e.message; }
+}
+async function pollRun() {
+  if (!RUN) return;
+  const d = await api(`/api/runs/${RUN.id}?since=${runSince}`).catch(() => null);
+  if (!d) return;
+  RUN.log = [...(RUN.log || []), ...d.log]; runSince = d.log_offset + d.log.length;
+  const steps = d.steps.map(s => `<li><span class="st ${s.status}">${s.status}</span> ${esc(s.title)}${s.summary ? ` — <span class="mute">${esc(s.summary)}</span>` : ''}</li>`).join('');
+  $('#run').innerHTML = `<div><b>${esc(d.mode)}${d.options?.kind ? ' ' + esc(d.options.kind) : ''}${d.options?.suite ? ' ' + esc(d.options.suite) : ''}</b> <span class="pill ${d.status === 'success' ? 'ok' : d.status === 'failed' ? 'bad' : 'accent'}">${esc(d.status)}</span> <span class="mute">${esc(d.id)}</span>${d.error ? ` <span class="bad">${esc(d.error)}</span>` : ''}</div>` +
+    `<ul class="steps">${steps}</ul><pre>${esc(RUN.log.slice(-80).map(l => l.line).join('\n'))}</pre>`;
+  if (['queued', 'running'].includes(d.status)) setTimeout(pollRun, 1500); else refresh();
+}
+
+init();
+</script>
+</body>
+</html>

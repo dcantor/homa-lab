@@ -22,7 +22,7 @@ priority queues vs FIFO), and protocol behaviour (priorities, grants, loss recov
 ./lab.sh image        # once, ~10 min: Ubuntu 26.04 + mainline 6.17.8 + homa.ko built and unit-tested (840 tests)
 ./lab.sh up && ./lab.sh wait
 ./lab.sh verify       # kernel + module, sw1 policy, jumbo ping matrix v4/v6, a Homa RTT between every pair
-./lab.sh test         # Robot Framework, tests/results_<timestamp>/report.html (~12 min)
+./lab.sh test         # Robot Framework, tests/results_<date>_<time>/report.html (~4 min)
 ./lab.sh down
 ```
 Resources: 5 VMs, 9 GiB RAM, 10 vCPUs. Disk: about 4 GB of base image plus small overlays.
@@ -42,6 +42,13 @@ Standing services on every host: `homa-prio` (HomaModule's priority-cutoff daemo
 servers for `homa_test`, ports 4100/4101, contents validated), `cp-homa` / `cp-tcp` (cp_node servers 4000/5000), and
 `cp-homa-probe` / `cp-tcp-probe` (4010/5010). The probe servers are separate processes, so a latency probe never queues
 behind bulk messages in the same server thread.
+
+## Portal
+`./lab.sh webapp` (installed as the user unit `homa-lab-webapp`) serves <http://192.168.50.231:8108>, behind Lab Hub's
+sign-in. It shows the topology with live traffic per sw1 port, sw1's eight queues per port, and Homa's counters per host
+(RESENDs and timeouts highlighted). It switches sw1's policy (prio / FIFO / off) and the resend timers (default / ×10),
+runs the measurements (matrix, compare, incast, loss, capture), verify and the Robot suites, and links the last test
+report. `/metrics` exports the counters for Prometheus.
 
 ## Commands
 ```bash
@@ -101,7 +108,7 @@ the global plugin directory for the same reason.
    now carries its own timeout so nothing is left running.
 
 ## Walkthrough
-`docs/homa-lab-walkthrough.pdf` (30 pages): Homa in five minutes, the architecture, the image build, and walkthroughs
+`docs/homa-lab-walkthrough.pdf` (33 pages): Homa in five minutes, the architecture, the image build, and walkthroughs
 of the lab coming up, one RPC on the wire, sw1's queues, Homa vs TCP, incast, loss and the timers, with the tests and
 findings. Rebuild it with `tests/.venv/bin/python tools/build_walkthrough.py [--refresh]` (`--refresh` re-measures, ~5 min).
 
@@ -111,8 +118,8 @@ Slides: `docs/homa-lab.pptx` (22 slides with speaker notes, the same data), rebu
 ## Layout
 `lab.conf` (source of truth) · `lab.sh` · `networks/` · `image/` (builder script, sw-qos, services, dissector) ·
 `tools/build_image.sh`, `tools/homalab.py` (all measurements; JSON out) · `tests/` (Robot; `tests/resources/HomaLab.py`
-wraps homalab.py) · `tests/results_<timestamp>/` (per run: Robot output and `state/`, the sysctls / module / sw1 policy before the run).
+wraps homalab.py) · `tests/results_<date>_<time>/` (per run: Robot output and `state/`, the sysctls / module / sw1 policy before the run; `results/latest` links the newest for Lab Hub) · `webapp/` (the portal).
 
 ## Not yet
-A portal, NMS metrics (a `/proc/net/homa_metrics` exporter), the upstream patch-series
+NMS wiring (Prometheus job + Grafana dashboard for the portal's `/metrics`), the upstream patch-series
 kernel as a second track, the hijack/GSO investigation.

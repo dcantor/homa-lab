@@ -324,6 +324,11 @@ cmd_bench() {   # tools/homalab.py: rtt | compare | incast | loss | capture | me
   python3 "$LAB_DIR/tools/homalab.py" "$@"
 }
 
+cmd_webapp() {   # the portal (webapp/, port 8108; installed as the user unit homa-lab-webapp)
+  [[ -x "$LAB_DIR/webapp/.venv/bin/python" ]] || "$LAB_DIR/webapp/setup.sh"
+  exec "$LAB_DIR/webapp/.venv/bin/python" "$LAB_DIR/webapp/app.py"
+}
+
 cmd_test() {
   [[ -x "$LAB_DIR/tests/.venv/bin/robot" ]] || "$LAB_DIR/tests/setup.sh"
   exec "$LAB_DIR/tests/run.sh" "$@"
@@ -343,6 +348,7 @@ usage: $(basename "$0") <command> [node...]
   bench <sub> [opts]   rtt SRC DST | compare | incast | loss | capture | metrics HOST  (tools/homalab.py --help)
   verify               module + kernel, sw1 policy, jumbo ping matrix v4/v6, one Homa RPC per host pair
   test [robot args]    Robot Framework suites, tests/results_<timestamp>/
+  webapp               the portal on port 8108 (user unit homa-lab-webapp)
   ssh <node> [cmd] | console <node> | log <node> [n]
   rebuild [node..]     re-define domains and cloud-init seeds (keeps disks; stop the nodes first)
   clean [node..]       destroy VMs and delete their disks (base image kept)
@@ -352,6 +358,6 @@ U
 
 cmd="${1:-}"; shift || true
 case "$cmd" in
-  image|up|down|wait|status|inventory|homa|qos|exec|verify|bench|test|ssh|console|log|rebuild|clean) "cmd_$cmd" "$@" ;;
+  image|up|down|wait|status|inventory|homa|qos|exec|verify|bench|test|webapp|ssh|console|log|rebuild|clean) "cmd_$cmd" "$@" ;;
   *) usage; exit 1 ;;
 esac

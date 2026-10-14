@@ -20,5 +20,6 @@ args=("$@"); explicit=0; for x in "$@"; do [[ "$x" == *.robot ]] && explicit=1; 
 "$ROBOT" --outputdir "$out" --name "homa lab" --loglevel INFO "${args[@]}"
 rc=$?
 ln -sfn "$(basename "$out")" results_latest
+mkdir -p ../results; ln -sfn "../tests/$(basename "$out")" ../results/latest   # where Lab Hub reads a lab's last run
 echo "==> report: $out/report.html  (rc=$rc)"
 exit $rc

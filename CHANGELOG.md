@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this lab. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-10-14
+### Added
+- Portal (`webapp/`, port 8108, user unit `homa-lab-webapp`, `./lab.sh webapp`): the topology with live traffic and
+  drops per sw1 port, sw1's eight queues per port (packets/s, drops), Homa's counters per host (DATA, GRANT, RESEND,
+  retransmissions, timeouts, packets by priority), sw1's policy (prio / FIFO / off) and Homa's resend timers (module
+  default / ×10) switchable, the five measurements and the Robot suites (all or one) as runs with their results, and the
+  last test report. `/metrics` exports the same counters for Prometheus; sign-in is the Lab Hub's.
+- `tests/results_<date>_<time>/` keeps one folder per Robot run (`tests/results_latest` links the newest); the run of
+  2026-10-14 (26/26) is committed.
+### Changed
+- Robot results moved from `results/<timestamp>/` to `tests/results_<date>_<time>/`; `results/latest` still links the
+  newest run, where Lab Hub reads it.
+
 ## [0.1.1] - 2026-10-13
 ### Added
 - Lab walkthrough PDF (`docs/homa-lab-walkthrough.pdf`), built from the live lab by `tools/build_walkthrough.py`

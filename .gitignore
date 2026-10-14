@@ -5,3 +5,5 @@ tests/.venv/
 __pycache__/
 *.pyc
 tests/results_*
+webapp/.venv/
+webapp/runs/
