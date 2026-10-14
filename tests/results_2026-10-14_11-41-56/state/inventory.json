@@ -1,0 +1,58 @@
+{
+    "lab": "homa-lab",
+    "kernel": "6.17.8-061708-generic",
+    "homa_commit": "65cecd7831e8b24ba7bcd967288bb7ce26fe8eba",
+    "data": {
+        "prefix4": "192.168.80.0/24",
+        "prefix6": "fd00:80::/64",
+        "mtu": 9000
+    },
+    "switch": {
+        "name": "sw1",
+        "mgmt_ip": "10.8.0.20",
+        "ports": 4,
+        "qos": {
+            "mode": "prio",
+            "rate": "1gbit",
+            "limit": 200
+        }
+    },
+    "hosts": [
+        {
+            "name": "h1",
+            "mgmt_ip": "10.8.0.11",
+            "ip": "192.168.80.11",
+            "ip6": "fd00:80::11",
+            "sw_port": "eth1",
+            "idx": 1,
+            "domain": "homa-h1"
+        },
+        {
+            "name": "h2",
+            "mgmt_ip": "10.8.0.12",
+            "ip": "192.168.80.12",
+            "ip6": "fd00:80::12",
+            "sw_port": "eth2",
+            "idx": 2,
+            "domain": "homa-h2"
+        },
+        {
+            "name": "h3",
+            "mgmt_ip": "10.8.0.13",
+            "ip": "192.168.80.13",
+            "ip6": "fd00:80::13",
+            "sw_port": "eth3",
+            "idx": 3,
+            "domain": "homa-h3"
+        },
+        {
+            "name": "h4",
+            "mgmt_ip": "10.8.0.14",
+            "ip": "192.168.80.14",
+            "ip6": "fd00:80::14",
+            "sw_port": "eth4",
+            "idx": 4,
+            "domain": "homa-h4"
+        }
+    ]
+}

@@ -1,0 +1,130 @@
+SW_QOS_MODE=prio
+SW_QOS_RATE=1gbit
+SW_QOS_LIMIT=200
+== eth1
+qdisc htb 1: root refcnt 2 r2q 10 default 0x1 direct_packets_stat 0 direct_qlen 1000
+ Sent 76904656 bytes 11449 pkt (dropped 0, overlimits 2423 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 21: parent 10:1 limit 200p
+ Sent 264296 bytes 2267 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 23: parent 10:3 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 25: parent 10:5 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc prio 10: parent 1:1 bands 8 priomap 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7
+ Sent 76904656 bytes 11449 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 27: parent 10:7 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 22: parent 10:2 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 26: parent 10:6 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 24: parent 10:4 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 28: parent 10:8 limit 200p
+ Sent 76640360 bytes 9182 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc clsact ffff: parent ffff:fff1 
+ Sent 19253577 bytes 2916 pkt (dropped 56, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+== eth2
+qdisc htb 1: root refcnt 2 r2q 10 default 0x1 direct_packets_stat 0 direct_qlen 1000
+ Sent 76914414 bytes 11459 pkt (dropped 0, overlimits 2387 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 21: parent 10:1 limit 200p
+ Sent 264956 bytes 2274 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 23: parent 10:3 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 25: parent 10:5 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc prio 10: parent 1:1 bands 8 priomap 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7
+ Sent 76914414 bytes 11459 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 27: parent 10:7 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 22: parent 10:2 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 26: parent 10:6 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 24: parent 10:4 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 28: parent 10:8 limit 200p
+ Sent 76649458 bytes 9185 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+== eth3
+qdisc htb 1: root refcnt 2 r2q 10 default 0x1 direct_packets_stat 0 direct_qlen 1000
+ Sent 73575214 bytes 11023 pkt (dropped 0, overlimits 2030 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 21: parent 10:1 limit 200p
+ Sent 259500 bytes 2214 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 23: parent 10:3 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 25: parent 10:5 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc prio 10: parent 1:1 bands 8 priomap 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7
+ Sent 73575214 bytes 11023 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 27: parent 10:7 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 22: parent 10:2 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 26: parent 10:6 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 24: parent 10:4 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 28: parent 10:8 limit 200p
+ Sent 73315714 bytes 8809 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+== eth4
+qdisc htb 1: root refcnt 2 r2q 10 default 0x1 direct_packets_stat 0 direct_qlen 1000
+ Sent 73566348 bytes 11024 pkt (dropped 0, overlimits 2081 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 21: parent 10:1 limit 200p
+ Sent 259500 bytes 2214 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 23: parent 10:3 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 25: parent 10:5 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc prio 10: parent 1:1 bands 8 priomap 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7
+ Sent 73566348 bytes 11024 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 27: parent 10:7 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 22: parent 10:2 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 26: parent 10:6 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 24: parent 10:4 limit 200p
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 28: parent 10:8 limit 200p
+ Sent 73306848 bytes 8810 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0

@@ -1,0 +1,4039 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.5 (Python 3.14.4 on linux)" generated="2026-10-14T11:42:00.110634" rpa="false" schemaversion="5">
+<suite id="s1" name="homa lab" source="/home/dcantor/homa-lab/tests/suites">
+<suite id="s1-s1" name="01 Platform" source="/home/dcantor/homa-lab/tests/suites/01_platform.robot">
+<kw name="Lab Setup" owner="common" type="SETUP">
+<kw name="Homa Hosts" owner="HomaLab">
+<msg time="2026-10-14T11:42:00.213910" level="INFO">${hosts} = ['h1', 'h2', 'h3', 'h4']</msg>
+<var>${hosts}</var>
+<status status="PASS" start="2026-10-14T11:42:00.213785" elapsed="0.000158"/>
+</kw>
+<kw name="Set Global Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:42:00.214369" level="INFO">@{HOSTS} = [ h1 | h2 | h3 | h4 ]</msg>
+<arg>@{HOSTS}</arg>
+<arg>@{hosts}</arg>
+<doc>Makes the variable available globally in all tests and suites.</doc>
+<status status="PASS" start="2026-10-14T11:42:00.214043" elapsed="0.000364"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:00.213411" elapsed="0.001046"/>
+</kw>
+<test id="s1-s1-t1" name="Every host runs the pinned kernel with homa.ko loaded from the lab build" line="9">
+<kw name="Lab Inventory" owner="HomaLab">
+<msg time="2026-10-14T11:42:00.214838" level="INFO">${inv} = {'lab': 'homa-lab', 'kernel': '6.17.8-061708-generic', 'homa_commit': '65cecd7831e8b24ba7bcd967288bb7ce26fe8eba', 'data': {'prefix4': '192.168.80.0/24', 'prefix6': 'fd00:80::/64', 'mtu': 9000}, 'switc...</msg>
+<var>${inv}</var>
+<status status="PASS" start="2026-10-14T11:42:00.214745" elapsed="0.000112"/>
+</kw>
+<for flavor="IN">
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:00.389112" level="INFO">h1$ uname -r
+6.17.8-061708-generic
+</msg>
+<msg time="2026-10-14T11:42:00.389298" level="INFO">${k} = 6.17.8-061708-generic</msg>
+<var>${k}</var>
+<arg>${h}</arg>
+<arg>uname -r</arg>
+<status status="PASS" start="2026-10-14T11:42:00.215083" elapsed="0.174245"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${k}</arg>
+<arg>${KERNEL}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:00.389503" elapsed="0.000341"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:00.564346" level="INFO">h1$ lsmod | awk '$1=="homa"{print $1}'
+homa
+</msg>
+<msg time="2026-10-14T11:42:00.564503" level="INFO">${mod} = homa</msg>
+<var>${mod}</var>
+<arg>${h}</arg>
+<arg>lsmod | awk '$1=="homa"{print $1}'</arg>
+<status status="PASS" start="2026-10-14T11:42:00.389929" elapsed="0.174605"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${mod}</arg>
+<arg>homa</arg>
+<arg>msg=${h}: homa is not loaded</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:00.564692" elapsed="0.000353"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:00.734698" level="INFO">h1$ modinfo -n homa
+/lib/modules/6.17.8-061708-generic/updates/homa.ko
+</msg>
+<msg time="2026-10-14T11:42:00.734842" level="INFO">${path} = /lib/modules/6.17.8-061708-generic/updates/homa.ko</msg>
+<var>${path}</var>
+<arg>${h}</arg>
+<arg>modinfo -n homa</arg>
+<status status="PASS" start="2026-10-14T11:42:00.565122" elapsed="0.169742"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${path}</arg>
+<arg>/lib/modules/${KERNEL}/updates/homa.ko</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:00.735017" elapsed="0.000367"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:00.911860" level="INFO">h1$ cat /sys/module/homa/srcversion
+3642FFB922B111B1E58D279
+</msg>
+<msg time="2026-10-14T11:42:00.912003" level="INFO">${loaded} = 3642FFB922B111B1E58D279</msg>
+<var>${loaded}</var>
+<arg>${h}</arg>
+<arg>cat /sys/module/homa/srcversion</arg>
+<status status="PASS" start="2026-10-14T11:42:00.735467" elapsed="0.176558"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:01.094121" level="INFO">h1$ modinfo -F srcversion homa
+3642FFB922B111B1E58D279
+</msg>
+<msg time="2026-10-14T11:42:01.094302" level="INFO">${built} = 3642FFB922B111B1E58D279</msg>
+<var>${built}</var>
+<arg>${h}</arg>
+<arg>modinfo -F srcversion homa</arg>
+<status status="PASS" start="2026-10-14T11:42:00.912154" elapsed="0.182171"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${loaded}</arg>
+<arg>${built}</arg>
+<arg>msg=${h}: the loaded module is not the installed build</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:01.094482" elapsed="0.000356"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:01.280998" level="INFO">h1$ git -c safe.directory=/opt/HomaModule -C /opt/HomaModule rev-parse HEAD
+65cecd7831e8b24ba7bcd967288bb7ce26fe8eba
+</msg>
+<msg time="2026-10-14T11:42:01.281170" level="INFO">${commit} = 65cecd7831e8b24ba7bcd967288bb7ce26fe8eba</msg>
+<var>${commit}</var>
+<arg>${h}</arg>
+<arg>git -c safe.directory=/opt/HomaModule -C /opt/HomaModule rev-parse HEAD</arg>
+<status status="PASS" start="2026-10-14T11:42:01.094915" elapsed="0.186294"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${commit}</arg>
+<arg>${inv}[homa_commit]</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:01.281404" elapsed="0.000371"/>
+</kw>
+<var name="${h}">h1</var>
+<status status="PASS" start="2026-10-14T11:42:00.215032" elapsed="1.066783"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:01.493519" level="INFO">h2$ uname -r
+6.17.8-061708-generic
+</msg>
+<msg time="2026-10-14T11:42:01.493709" level="INFO">${k} = 6.17.8-061708-generic</msg>
+<var>${k}</var>
+<arg>${h}</arg>
+<arg>uname -r</arg>
+<status status="PASS" start="2026-10-14T11:42:01.282017" elapsed="0.211724"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${k}</arg>
+<arg>${KERNEL}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:01.493961" elapsed="0.000389"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:01.701570" level="INFO">h2$ lsmod | awk '$1=="homa"{print $1}'
+homa
+</msg>
+<msg time="2026-10-14T11:42:01.701735" level="INFO">${mod} = homa</msg>
+<var>${mod}</var>
+<arg>${h}</arg>
+<arg>lsmod | awk '$1=="homa"{print $1}'</arg>
+<status status="PASS" start="2026-10-14T11:42:01.494456" elapsed="0.207313"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${mod}</arg>
+<arg>homa</arg>
+<arg>msg=${h}: homa is not loaded</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:01.701965" elapsed="0.000378"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:01.892484" level="INFO">h2$ modinfo -n homa
+/lib/modules/6.17.8-061708-generic/updates/homa.ko
+</msg>
+<msg time="2026-10-14T11:42:01.892656" level="INFO">${path} = /lib/modules/6.17.8-061708-generic/updates/homa.ko</msg>
+<var>${path}</var>
+<arg>${h}</arg>
+<arg>modinfo -n homa</arg>
+<status status="PASS" start="2026-10-14T11:42:01.702430" elapsed="0.190258"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${path}</arg>
+<arg>/lib/modules/${KERNEL}/updates/homa.ko</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:01.892863" elapsed="0.000294"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:02.071409" level="INFO">h2$ cat /sys/module/homa/srcversion
+3642FFB922B111B1E58D279
+</msg>
+<msg time="2026-10-14T11:42:02.071608" level="INFO">${loaded} = 3642FFB922B111B1E58D279</msg>
+<var>${loaded}</var>
+<arg>${h}</arg>
+<arg>cat /sys/module/homa/srcversion</arg>
+<status status="PASS" start="2026-10-14T11:42:01.893240" elapsed="0.178397"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:02.248681" level="INFO">h2$ modinfo -F srcversion homa
+3642FFB922B111B1E58D279
+</msg>
+<msg time="2026-10-14T11:42:02.248829" level="INFO">${built} = 3642FFB922B111B1E58D279</msg>
+<var>${built}</var>
+<arg>${h}</arg>
+<arg>modinfo -F srcversion homa</arg>
+<status status="PASS" start="2026-10-14T11:42:02.071766" elapsed="0.177083"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${loaded}</arg>
+<arg>${built}</arg>
+<arg>msg=${h}: the loaded module is not the installed build</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:02.248998" elapsed="0.000368"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:02.432800" level="INFO">h2$ git -c safe.directory=/opt/HomaModule -C /opt/HomaModule rev-parse HEAD
+65cecd7831e8b24ba7bcd967288bb7ce26fe8eba
+</msg>
+<msg time="2026-10-14T11:42:02.432944" level="INFO">${commit} = 65cecd7831e8b24ba7bcd967288bb7ce26fe8eba</msg>
+<var>${commit}</var>
+<arg>${h}</arg>
+<arg>git -c safe.directory=/opt/HomaModule -C /opt/HomaModule rev-parse HEAD</arg>
+<status status="PASS" start="2026-10-14T11:42:02.249466" elapsed="0.183500"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${commit}</arg>
+<arg>${inv}[homa_commit]</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:02.433126" elapsed="0.000353"/>
+</kw>
+<var name="${h}">h2</var>
+<status status="PASS" start="2026-10-14T11:42:01.281949" elapsed="1.151559"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:02.609792" level="INFO">h3$ uname -r
+6.17.8-061708-generic
+</msg>
+<msg time="2026-10-14T11:42:02.609948" level="INFO">${k} = 6.17.8-061708-generic</msg>
+<var>${k}</var>
+<arg>${h}</arg>
+<arg>uname -r</arg>
+<status status="PASS" start="2026-10-14T11:42:02.433672" elapsed="0.176298"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${k}</arg>
+<arg>${KERNEL}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:02.610135" elapsed="0.000359"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:02.782607" level="INFO">h3$ lsmod | awk '$1=="homa"{print $1}'
+homa
+</msg>
+<msg time="2026-10-14T11:42:02.782763" level="INFO">${mod} = homa</msg>
+<var>${mod}</var>
+<arg>${h}</arg>
+<arg>lsmod | awk '$1=="homa"{print $1}'</arg>
+<status status="PASS" start="2026-10-14T11:42:02.610603" elapsed="0.172186"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${mod}</arg>
+<arg>homa</arg>
+<arg>msg=${h}: homa is not loaded</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:02.782956" elapsed="0.000412"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:02.956063" level="INFO">h3$ modinfo -n homa
+/lib/modules/6.17.8-061708-generic/updates/homa.ko
+</msg>
+<msg time="2026-10-14T11:42:02.956259" level="INFO">${path} = /lib/modules/6.17.8-061708-generic/updates/homa.ko</msg>
+<var>${path}</var>
+<arg>${h}</arg>
+<arg>modinfo -n homa</arg>
+<status status="PASS" start="2026-10-14T11:42:02.783465" elapsed="0.172825"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${path}</arg>
+<arg>/lib/modules/${KERNEL}/updates/homa.ko</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:02.956444" elapsed="0.000373"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:03.123739" level="INFO">h3$ cat /sys/module/homa/srcversion
+3642FFB922B111B1E58D279
+</msg>
+<msg time="2026-10-14T11:42:03.123883" level="INFO">${loaded} = 3642FFB922B111B1E58D279</msg>
+<var>${loaded}</var>
+<arg>${h}</arg>
+<arg>cat /sys/module/homa/srcversion</arg>
+<status status="PASS" start="2026-10-14T11:42:02.956899" elapsed="0.167004"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:03.291221" level="INFO">h3$ modinfo -F srcversion homa
+3642FFB922B111B1E58D279
+</msg>
+<msg time="2026-10-14T11:42:03.291365" level="INFO">${built} = 3642FFB922B111B1E58D279</msg>
+<var>${built}</var>
+<arg>${h}</arg>
+<arg>modinfo -F srcversion homa</arg>
+<status status="PASS" start="2026-10-14T11:42:03.124027" elapsed="0.167358"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${loaded}</arg>
+<arg>${built}</arg>
+<arg>msg=${h}: the loaded module is not the installed build</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:03.291540" elapsed="0.000326"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:03.460154" level="INFO">h3$ git -c safe.directory=/opt/HomaModule -C /opt/HomaModule rev-parse HEAD
+65cecd7831e8b24ba7bcd967288bb7ce26fe8eba
+</msg>
+<msg time="2026-10-14T11:42:03.460357" level="INFO">${commit} = 65cecd7831e8b24ba7bcd967288bb7ce26fe8eba</msg>
+<var>${commit}</var>
+<arg>${h}</arg>
+<arg>git -c safe.directory=/opt/HomaModule -C /opt/HomaModule rev-parse HEAD</arg>
+<status status="PASS" start="2026-10-14T11:42:03.291937" elapsed="0.168450"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${commit}</arg>
+<arg>${inv}[homa_commit]</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:03.460604" elapsed="0.000371"/>
+</kw>
+<var name="${h}">h3</var>
+<status status="PASS" start="2026-10-14T11:42:02.433615" elapsed="1.027395"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:03.635265" level="INFO">h4$ uname -r
+6.17.8-061708-generic
+</msg>
+<msg time="2026-10-14T11:42:03.635449" level="INFO">${k} = 6.17.8-061708-generic</msg>
+<var>${k}</var>
+<arg>${h}</arg>
+<arg>uname -r</arg>
+<status status="PASS" start="2026-10-14T11:42:03.461224" elapsed="0.174253"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${k}</arg>
+<arg>${KERNEL}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:03.635641" elapsed="0.000279"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:03.819417" level="INFO">h4$ lsmod | awk '$1=="homa"{print $1}'
+homa
+</msg>
+<msg time="2026-10-14T11:42:03.819569" level="INFO">${mod} = homa</msg>
+<var>${mod}</var>
+<arg>${h}</arg>
+<arg>lsmod | awk '$1=="homa"{print $1}'</arg>
+<status status="PASS" start="2026-10-14T11:42:03.635989" elapsed="0.183600"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${mod}</arg>
+<arg>homa</arg>
+<arg>msg=${h}: homa is not loaded</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:03.819737" elapsed="0.000336"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:04.011018" level="INFO">h4$ modinfo -n homa
+/lib/modules/6.17.8-061708-generic/updates/homa.ko
+</msg>
+<msg time="2026-10-14T11:42:04.011199" level="INFO">${path} = /lib/modules/6.17.8-061708-generic/updates/homa.ko</msg>
+<var>${path}</var>
+<arg>${h}</arg>
+<arg>modinfo -n homa</arg>
+<status status="PASS" start="2026-10-14T11:42:03.820227" elapsed="0.190994"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${path}</arg>
+<arg>/lib/modules/${KERNEL}/updates/homa.ko</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:04.011387" elapsed="0.000315"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:04.201450" level="INFO">h4$ cat /sys/module/homa/srcversion
+3642FFB922B111B1E58D279
+</msg>
+<msg time="2026-10-14T11:42:04.201633" level="INFO">${loaded} = 3642FFB922B111B1E58D279</msg>
+<var>${loaded}</var>
+<arg>${h}</arg>
+<arg>cat /sys/module/homa/srcversion</arg>
+<status status="PASS" start="2026-10-14T11:42:04.011776" elapsed="0.189891"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:04.384981" level="INFO">h4$ modinfo -F srcversion homa
+3642FFB922B111B1E58D279
+</msg>
+<msg time="2026-10-14T11:42:04.385127" level="INFO">${built} = 3642FFB922B111B1E58D279</msg>
+<var>${built}</var>
+<arg>${h}</arg>
+<arg>modinfo -F srcversion homa</arg>
+<status status="PASS" start="2026-10-14T11:42:04.201817" elapsed="0.183334"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${loaded}</arg>
+<arg>${built}</arg>
+<arg>msg=${h}: the loaded module is not the installed build</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:04.385311" elapsed="0.000352"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:04.559943" level="INFO">h4$ git -c safe.directory=/opt/HomaModule -C /opt/HomaModule rev-parse HEAD
+65cecd7831e8b24ba7bcd967288bb7ce26fe8eba
+</msg>
+<msg time="2026-10-14T11:42:04.560090" level="INFO">${commit} = 65cecd7831e8b24ba7bcd967288bb7ce26fe8eba</msg>
+<var>${commit}</var>
+<arg>${h}</arg>
+<arg>git -c safe.directory=/opt/HomaModule -C /opt/HomaModule rev-parse HEAD</arg>
+<status status="PASS" start="2026-10-14T11:42:04.385736" elapsed="0.174399"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${commit}</arg>
+<arg>${inv}[homa_commit]</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:04.560305" elapsed="0.000288"/>
+</kw>
+<var name="${h}">h4</var>
+<status status="PASS" start="2026-10-14T11:42:03.461143" elapsed="1.099478"/>
+</iter>
+<var>${h}</var>
+<value>@{HOSTS}</value>
+<status status="PASS" start="2026-10-14T11:42:00.214904" elapsed="4.345744"/>
+</for>
+<status status="PASS" start="2026-10-14T11:42:00.214508" elapsed="4.346238"/>
+</test>
+<test id="s1-s1-t2" name="The module's unit tests passed in the image build" line="25">
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:04.739639" level="INFO">h1$ cat /var/log/homa-unit.result
+unit tests: PASS (840 / 840 tests passed)
+</msg>
+<msg time="2026-10-14T11:42:04.739794" level="INFO">${r} = unit tests: PASS (840 / 840 tests passed)</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>cat /var/log/homa-unit.result</arg>
+<status status="PASS" start="2026-10-14T11:42:04.561151" elapsed="0.178669"/>
+</kw>
+<kw name="Should Match Regexp" owner="BuiltIn">
+<arg>${r}</arg>
+<arg>^unit tests: PASS \\((\\d+) / \\1 tests passed\\)$</arg>
+<doc>Fails if the `string` does not match the regular expression `pattern`.</doc>
+<status status="PASS" start="2026-10-14T11:42:04.739989" elapsed="0.000474"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:04.560910" elapsed="0.179642"/>
+</test>
+<test id="s1-s1-t3" name="Homa's interfaces exist: sysctls, metrics, an IPPROTO 146 socket" line="29">
+<for flavor="IN">
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:04.915050" level="INFO">h1$ test -d /proc/sys/net/homa &amp;&amp; test -r /proc/net/homa_metrics
+</msg>
+<arg>${h}</arg>
+<arg>test -d /proc/sys/net/homa &amp;&amp; test -r /proc/net/homa_metrics</arg>
+<status status="PASS" start="2026-10-14T11:42:04.741072" elapsed="0.174094"/>
+</kw>
+<kw name="Homa Sysctl" owner="HomaLab">
+<msg time="2026-10-14T11:42:05.085217" level="INFO">${mbps} = 1000</msg>
+<var>${mbps}</var>
+<arg>${h}</arg>
+<arg>link_mbps</arg>
+<status status="PASS" start="2026-10-14T11:42:04.915313" elapsed="0.169954"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${mbps}</arg>
+<arg>1000</arg>
+<arg>msg=${h}: link_mbps must match sw1's 1 Gbit/s ports</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:05.085417" elapsed="0.000354"/>
+</kw>
+<kw name="Homa Sysctl" owner="HomaLab">
+<msg time="2026-10-14T11:42:05.270164" level="INFO">${n} = 8</msg>
+<var>${n}</var>
+<arg>${h}</arg>
+<arg>num_priorities</arg>
+<status status="PASS" start="2026-10-14T11:42:05.085841" elapsed="0.184377"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${n}</arg>
+<arg>8</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:05.270369" elapsed="0.000276"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:05.469990" level="INFO">h1$ python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146); s.close()"
+</msg>
+<arg>${h}</arg>
+<arg>python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146); s.close()"</arg>
+<status status="PASS" start="2026-10-14T11:42:05.270710" elapsed="0.199386"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:05.660157" level="INFO">h1$ python3 -c "import socket; s=socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, 146); s.close()"
+</msg>
+<arg>${h}</arg>
+<arg>python3 -c "import socket; s=socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, 146); s.close()"</arg>
+<status status="PASS" start="2026-10-14T11:42:05.470250" elapsed="0.190034"/>
+</kw>
+<var name="${h}">h1</var>
+<status status="PASS" start="2026-10-14T11:42:04.741016" elapsed="0.919327"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:05.837163" level="INFO">h2$ test -d /proc/sys/net/homa &amp;&amp; test -r /proc/net/homa_metrics
+</msg>
+<arg>${h}</arg>
+<arg>test -d /proc/sys/net/homa &amp;&amp; test -r /proc/net/homa_metrics</arg>
+<status status="PASS" start="2026-10-14T11:42:05.660621" elapsed="0.176662"/>
+</kw>
+<kw name="Homa Sysctl" owner="HomaLab">
+<msg time="2026-10-14T11:42:06.013292" level="INFO">${mbps} = 1000</msg>
+<var>${mbps}</var>
+<arg>${h}</arg>
+<arg>link_mbps</arg>
+<status status="PASS" start="2026-10-14T11:42:05.837421" elapsed="0.175923"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${mbps}</arg>
+<arg>1000</arg>
+<arg>msg=${h}: link_mbps must match sw1's 1 Gbit/s ports</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:06.013565" elapsed="0.000435"/>
+</kw>
+<kw name="Homa Sysctl" owner="HomaLab">
+<msg time="2026-10-14T11:42:06.185661" level="INFO">${n} = 8</msg>
+<var>${n}</var>
+<arg>${h}</arg>
+<arg>num_priorities</arg>
+<status status="PASS" start="2026-10-14T11:42:06.014087" elapsed="0.171613"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${n}</arg>
+<arg>8</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:06.185847" elapsed="0.000288"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:06.374490" level="INFO">h2$ python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146); s.close()"
+</msg>
+<arg>${h}</arg>
+<arg>python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146); s.close()"</arg>
+<status status="PASS" start="2026-10-14T11:42:06.186242" elapsed="0.188349"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:06.558765" level="INFO">h2$ python3 -c "import socket; s=socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, 146); s.close()"
+</msg>
+<arg>${h}</arg>
+<arg>python3 -c "import socket; s=socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, 146); s.close()"</arg>
+<status status="PASS" start="2026-10-14T11:42:06.374716" elapsed="0.184155"/>
+</kw>
+<var name="${h}">h2</var>
+<status status="PASS" start="2026-10-14T11:42:05.660519" elapsed="0.898400"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:06.727346" level="INFO">h3$ test -d /proc/sys/net/homa &amp;&amp; test -r /proc/net/homa_metrics
+</msg>
+<arg>${h}</arg>
+<arg>test -d /proc/sys/net/homa &amp;&amp; test -r /proc/net/homa_metrics</arg>
+<status status="PASS" start="2026-10-14T11:42:06.559175" elapsed="0.168276"/>
+</kw>
+<kw name="Homa Sysctl" owner="HomaLab">
+<msg time="2026-10-14T11:42:06.895252" level="INFO">${mbps} = 1000</msg>
+<var>${mbps}</var>
+<arg>${h}</arg>
+<arg>link_mbps</arg>
+<status status="PASS" start="2026-10-14T11:42:06.727624" elapsed="0.167675"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${mbps}</arg>
+<arg>1000</arg>
+<arg>msg=${h}: link_mbps must match sw1's 1 Gbit/s ports</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:06.895468" elapsed="0.000334"/>
+</kw>
+<kw name="Homa Sysctl" owner="HomaLab">
+<msg time="2026-10-14T11:42:07.062442" level="INFO">${n} = 8</msg>
+<var>${n}</var>
+<arg>${h}</arg>
+<arg>num_priorities</arg>
+<status status="PASS" start="2026-10-14T11:42:06.895871" elapsed="0.166613"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${n}</arg>
+<arg>8</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:07.062643" elapsed="0.000291"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:07.245582" level="INFO">h3$ python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146); s.close()"
+</msg>
+<arg>${h}</arg>
+<arg>python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146); s.close()"</arg>
+<status status="PASS" start="2026-10-14T11:42:07.062999" elapsed="0.182697"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:07.422816" level="INFO">h3$ python3 -c "import socket; s=socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, 146); s.close()"
+</msg>
+<arg>${h}</arg>
+<arg>python3 -c "import socket; s=socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, 146); s.close()"</arg>
+<status status="PASS" start="2026-10-14T11:42:07.245835" elapsed="0.177107"/>
+</kw>
+<var name="${h}">h3</var>
+<status status="PASS" start="2026-10-14T11:42:06.559067" elapsed="0.863917"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:07.593099" level="INFO">h4$ test -d /proc/sys/net/homa &amp;&amp; test -r /proc/net/homa_metrics
+</msg>
+<arg>${h}</arg>
+<arg>test -d /proc/sys/net/homa &amp;&amp; test -r /proc/net/homa_metrics</arg>
+<status status="PASS" start="2026-10-14T11:42:07.423209" elapsed="0.169994"/>
+</kw>
+<kw name="Homa Sysctl" owner="HomaLab">
+<msg time="2026-10-14T11:42:07.761065" level="INFO">${mbps} = 1000</msg>
+<var>${mbps}</var>
+<arg>${h}</arg>
+<arg>link_mbps</arg>
+<status status="PASS" start="2026-10-14T11:42:07.593335" elapsed="0.167779"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${mbps}</arg>
+<arg>1000</arg>
+<arg>msg=${h}: link_mbps must match sw1's 1 Gbit/s ports</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:07.761343" elapsed="0.000402"/>
+</kw>
+<kw name="Homa Sysctl" owner="HomaLab">
+<msg time="2026-10-14T11:42:07.939003" level="INFO">${n} = 8</msg>
+<var>${n}</var>
+<arg>${h}</arg>
+<arg>num_priorities</arg>
+<status status="PASS" start="2026-10-14T11:42:07.761831" elapsed="0.177228"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${n}</arg>
+<arg>8</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:07.939295" elapsed="0.000383"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:08.130757" level="INFO">h4$ python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146); s.close()"
+</msg>
+<arg>${h}</arg>
+<arg>python3 -c "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146); s.close()"</arg>
+<status status="PASS" start="2026-10-14T11:42:07.939767" elapsed="0.191092"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:08.331595" level="INFO">h4$ python3 -c "import socket; s=socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, 146); s.close()"
+</msg>
+<arg>${h}</arg>
+<arg>python3 -c "import socket; s=socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, 146); s.close()"</arg>
+<status status="PASS" start="2026-10-14T11:42:08.130988" elapsed="0.200712"/>
+</kw>
+<var name="${h}">h4</var>
+<status status="PASS" start="2026-10-14T11:42:07.423106" elapsed="0.908637"/>
+</iter>
+<var>${h}</var>
+<value>@{HOSTS}</value>
+<status status="PASS" start="2026-10-14T11:42:04.740891" elapsed="3.590880"/>
+</for>
+<status status="PASS" start="2026-10-14T11:42:04.740697" elapsed="3.591190"/>
+</test>
+<test id="s1-s1-t4" name="The standing test servers and homa_prio run on every host" line="40">
+<for flavor="IN">
+<iter>
+<kw name="Host Services Should Be Active" owner="common">
+<for flavor="IN">
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:08.520471" level="INFO">h1$ systemctl is-active homa-prio
+active
+</msg>
+<msg time="2026-10-14T11:42:08.520610" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:08.332991" elapsed="0.187640"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:08.520805" elapsed="0.000351"/>
+</kw>
+<var name="${s}">homa-prio</var>
+<status status="PASS" start="2026-10-14T11:42:08.332927" elapsed="0.188276"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:08.695807" level="INFO">h1$ systemctl is-active homa-echo
+active
+</msg>
+<msg time="2026-10-14T11:42:08.695952" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:08.521354" elapsed="0.174620"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:08.696156" elapsed="0.000352"/>
+</kw>
+<var name="${s}">homa-echo</var>
+<status status="PASS" start="2026-10-14T11:42:08.521296" elapsed="0.175242"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:08.873102" level="INFO">h1$ systemctl is-active homa-echo6
+active
+</msg>
+<msg time="2026-10-14T11:42:08.873275" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:08.696702" elapsed="0.176593"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:08.873450" elapsed="0.000339"/>
+</kw>
+<var name="${s}">homa-echo6</var>
+<status status="PASS" start="2026-10-14T11:42:08.696616" elapsed="0.177202"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:09.043638" level="INFO">h1$ systemctl is-active cp-homa
+active
+</msg>
+<msg time="2026-10-14T11:42:09.043794" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:08.873955" elapsed="0.169864"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:09.043995" elapsed="0.000395"/>
+</kw>
+<var name="${s}">cp-homa</var>
+<status status="PASS" start="2026-10-14T11:42:08.873897" elapsed="0.170528"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:09.217061" level="INFO">h1$ systemctl is-active cp-tcp
+active
+</msg>
+<msg time="2026-10-14T11:42:09.217233" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:09.044583" elapsed="0.172674"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:09.217406" elapsed="0.000343"/>
+</kw>
+<var name="${s}">cp-tcp</var>
+<status status="PASS" start="2026-10-14T11:42:09.044515" elapsed="0.173263"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:09.395783" level="INFO">h1$ systemctl is-active cp-homa-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:09.395928" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:09.217914" elapsed="0.178039"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:09.396105" elapsed="0.000347"/>
+</kw>
+<var name="${s}">cp-homa-probe</var>
+<status status="PASS" start="2026-10-14T11:42:09.217858" elapsed="0.178622"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:09.569946" level="INFO">h1$ systemctl is-active cp-tcp-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:09.570094" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:09.396611" elapsed="0.173504"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:09.570283" elapsed="0.000357"/>
+</kw>
+<var name="${s}">cp-tcp-probe</var>
+<status status="PASS" start="2026-10-14T11:42:09.396556" elapsed="0.174133"/>
+</iter>
+<var>${s}</var>
+<value>@{SERVICES}</value>
+<status status="PASS" start="2026-10-14T11:42:08.332841" elapsed="1.237875"/>
+</for>
+<arg>${h}</arg>
+<status status="PASS" start="2026-10-14T11:42:08.332612" elapsed="1.238164"/>
+</kw>
+<var name="${h}">h1</var>
+<status status="PASS" start="2026-10-14T11:42:08.332449" elapsed="1.238348"/>
+</iter>
+<iter>
+<kw name="Host Services Should Be Active" owner="common">
+<for flavor="IN">
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:09.745637" level="INFO">h2$ systemctl is-active homa-prio
+active
+</msg>
+<msg time="2026-10-14T11:42:09.745790" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:09.571288" elapsed="0.174522"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:09.745963" elapsed="0.000410"/>
+</kw>
+<var name="${s}">homa-prio</var>
+<status status="PASS" start="2026-10-14T11:42:09.571237" elapsed="0.175169"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:09.923311" level="INFO">h2$ systemctl is-active homa-echo
+active
+</msg>
+<msg time="2026-10-14T11:42:09.923468" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:09.746544" elapsed="0.176949"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:09.923673" elapsed="0.000399"/>
+</kw>
+<var name="${s}">homa-echo</var>
+<status status="PASS" start="2026-10-14T11:42:09.746487" elapsed="0.177620"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:10.109303" level="INFO">h2$ systemctl is-active homa-echo6
+active
+</msg>
+<msg time="2026-10-14T11:42:10.109469" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:09.924289" elapsed="0.185218"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:10.109693" elapsed="0.000340"/>
+</kw>
+<var name="${s}">homa-echo6</var>
+<status status="PASS" start="2026-10-14T11:42:09.924217" elapsed="0.185847"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:10.284639" level="INFO">h2$ systemctl is-active cp-homa
+active
+</msg>
+<msg time="2026-10-14T11:42:10.284799" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:10.110219" elapsed="0.174602"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:10.284974" elapsed="0.000378"/>
+</kw>
+<var name="${s}">cp-homa</var>
+<status status="PASS" start="2026-10-14T11:42:10.110147" elapsed="0.175235"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:10.462047" level="INFO">h2$ systemctl is-active cp-tcp
+active
+</msg>
+<msg time="2026-10-14T11:42:10.462208" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:10.285515" elapsed="0.176714"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:10.462378" elapsed="0.000328"/>
+</kw>
+<var name="${s}">cp-tcp</var>
+<status status="PASS" start="2026-10-14T11:42:10.285461" elapsed="0.177274"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:10.636945" level="INFO">h2$ systemctl is-active cp-homa-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:10.637086" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:10.462866" elapsed="0.174240"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:10.637286" elapsed="0.000334"/>
+</kw>
+<var name="${s}">cp-homa-probe</var>
+<status status="PASS" start="2026-10-14T11:42:10.462809" elapsed="0.174840"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:10.809825" level="INFO">h2$ systemctl is-active cp-tcp-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:10.809970" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:10.637800" elapsed="0.172191"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:10.810156" elapsed="0.000338"/>
+</kw>
+<var name="${s}">cp-tcp-probe</var>
+<status status="PASS" start="2026-10-14T11:42:10.637744" elapsed="0.172778"/>
+</iter>
+<var>${s}</var>
+<value>@{SERVICES}</value>
+<status status="PASS" start="2026-10-14T11:42:09.571142" elapsed="1.239407"/>
+</for>
+<arg>${h}</arg>
+<status status="PASS" start="2026-10-14T11:42:09.570974" elapsed="1.239623"/>
+</kw>
+<var name="${h}">h2</var>
+<status status="PASS" start="2026-10-14T11:42:09.570866" elapsed="1.239751"/>
+</iter>
+<iter>
+<kw name="Host Services Should Be Active" owner="common">
+<for flavor="IN">
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:10.982267" level="INFO">h3$ systemctl is-active homa-prio
+active
+</msg>
+<msg time="2026-10-14T11:42:10.982421" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:10.811094" elapsed="0.171348"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:10.982610" elapsed="0.000337"/>
+</kw>
+<var name="${s}">homa-prio</var>
+<status status="PASS" start="2026-10-14T11:42:10.811042" elapsed="0.171934"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:11.163220" level="INFO">h3$ systemctl is-active homa-echo
+active
+</msg>
+<msg time="2026-10-14T11:42:11.163388" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:10.983106" elapsed="0.180302"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:11.163566" elapsed="0.000340"/>
+</kw>
+<var name="${s}">homa-echo</var>
+<status status="PASS" start="2026-10-14T11:42:10.983052" elapsed="0.180883"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:11.332589" level="INFO">h3$ systemctl is-active homa-echo6
+active
+</msg>
+<msg time="2026-10-14T11:42:11.332740" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:11.164069" elapsed="0.168692"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:11.332940" elapsed="0.000375"/>
+</kw>
+<var name="${s}">homa-echo6</var>
+<status status="PASS" start="2026-10-14T11:42:11.164013" elapsed="0.169335"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:11.504325" level="INFO">h3$ systemctl is-active cp-homa
+active
+</msg>
+<msg time="2026-10-14T11:42:11.504467" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:11.333495" elapsed="0.171003"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:11.504702" elapsed="0.000377"/>
+</kw>
+<var name="${s}">cp-homa</var>
+<status status="PASS" start="2026-10-14T11:42:11.333429" elapsed="0.171680"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:11.673718" level="INFO">h3$ systemctl is-active cp-tcp
+active
+</msg>
+<msg time="2026-10-14T11:42:11.673871" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:11.505315" elapsed="0.168577"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:11.674045" elapsed="0.000380"/>
+</kw>
+<var name="${s}">cp-tcp</var>
+<status status="PASS" start="2026-10-14T11:42:11.505230" elapsed="0.169226"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:11.857020" level="INFO">h3$ systemctl is-active cp-homa-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:11.857170" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:11.674597" elapsed="0.182610"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:11.857373" elapsed="0.000365"/>
+</kw>
+<var name="${s}">cp-homa-probe</var>
+<status status="PASS" start="2026-10-14T11:42:11.674531" elapsed="0.183238"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:12.041238" level="INFO">h3$ systemctl is-active cp-tcp-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:12.041388" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:11.857926" elapsed="0.183483"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:12.041562" elapsed="0.000373"/>
+</kw>
+<var name="${s}">cp-tcp-probe</var>
+<status status="PASS" start="2026-10-14T11:42:11.857856" elapsed="0.184113"/>
+</iter>
+<var>${s}</var>
+<value>@{SERVICES}</value>
+<status status="PASS" start="2026-10-14T11:42:10.810959" elapsed="1.231036"/>
+</for>
+<arg>${h}</arg>
+<status status="PASS" start="2026-10-14T11:42:10.810801" elapsed="1.231248"/>
+</kw>
+<var name="${h}">h3</var>
+<status status="PASS" start="2026-10-14T11:42:10.810684" elapsed="1.231388"/>
+</iter>
+<iter>
+<kw name="Host Services Should Be Active" owner="common">
+<for flavor="IN">
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:12.220728" level="INFO">h4$ systemctl is-active homa-prio
+active
+</msg>
+<msg time="2026-10-14T11:42:12.220874" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:12.042619" elapsed="0.178275"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:12.221046" elapsed="0.000372"/>
+</kw>
+<var name="${s}">homa-prio</var>
+<status status="PASS" start="2026-10-14T11:42:12.042561" elapsed="0.178889"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:12.392294" level="INFO">h4$ systemctl is-active homa-echo
+active
+</msg>
+<msg time="2026-10-14T11:42:12.392443" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:12.221590" elapsed="0.170875"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:12.392611" elapsed="0.000349"/>
+</kw>
+<var name="${s}">homa-echo</var>
+<status status="PASS" start="2026-10-14T11:42:12.221529" elapsed="0.171460"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:12.568953" level="INFO">h4$ systemctl is-active homa-echo6
+active
+</msg>
+<msg time="2026-10-14T11:42:12.569099" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:12.393135" elapsed="0.175986"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:12.569298" elapsed="0.000336"/>
+</kw>
+<var name="${s}">homa-echo6</var>
+<status status="PASS" start="2026-10-14T11:42:12.393069" elapsed="0.176594"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:12.753022" level="INFO">h4$ systemctl is-active cp-homa
+active
+</msg>
+<msg time="2026-10-14T11:42:12.753224" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:12.569845" elapsed="0.183409"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:12.753488" elapsed="0.000487"/>
+</kw>
+<var name="${s}">cp-homa</var>
+<status status="PASS" start="2026-10-14T11:42:12.569769" elapsed="0.184248"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:12.935503" level="INFO">h4$ systemctl is-active cp-tcp
+active
+</msg>
+<msg time="2026-10-14T11:42:12.935658" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:12.754237" elapsed="0.181442"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:12.935854" elapsed="0.000424"/>
+</kw>
+<var name="${s}">cp-tcp</var>
+<status status="PASS" start="2026-10-14T11:42:12.754137" elapsed="0.182173"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:13.117431" level="INFO">h4$ systemctl is-active cp-homa-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:13.117597" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:12.936498" elapsed="0.181120"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:13.117769" elapsed="0.000364"/>
+</kw>
+<var name="${s}">cp-homa-probe</var>
+<status status="PASS" start="2026-10-14T11:42:12.936406" elapsed="0.181755"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:13.297920" level="INFO">h4$ systemctl is-active cp-tcp-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:13.298063" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:13.118376" elapsed="0.179707"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:13.298250" elapsed="0.000351"/>
+</kw>
+<var name="${s}">cp-tcp-probe</var>
+<status status="PASS" start="2026-10-14T11:42:13.118307" elapsed="0.180325"/>
+</iter>
+<var>${s}</var>
+<value>@{SERVICES}</value>
+<status status="PASS" start="2026-10-14T11:42:12.042481" elapsed="1.256179"/>
+</for>
+<arg>${h}</arg>
+<status status="PASS" start="2026-10-14T11:42:12.042311" elapsed="1.256405"/>
+</kw>
+<var name="${h}">h4</var>
+<status status="PASS" start="2026-10-14T11:42:12.042155" elapsed="1.256583"/>
+</iter>
+<var>${h}</var>
+<value>@{HOSTS}</value>
+<status status="PASS" start="2026-10-14T11:42:08.332333" elapsed="4.966426"/>
+</for>
+<status status="PASS" start="2026-10-14T11:42:08.332036" elapsed="4.966797"/>
+</test>
+<test id="s1-s1-t5" name="sw1 bridges its four ports at MTU 9000 with the configured egress policy" line="45">
+<kw name="Lab Inventory" owner="HomaLab">
+<msg time="2026-10-14T11:42:13.299322" level="INFO">${inv} = {'lab': 'homa-lab', 'kernel': '6.17.8-061708-generic', 'homa_commit': '65cecd7831e8b24ba7bcd967288bb7ce26fe8eba', 'data': {'prefix4': '192.168.80.0/24', 'prefix6': 'fd00:80::/64', 'mtu': 9000}, 'switc...</msg>
+<var>${inv}</var>
+<status status="PASS" start="2026-10-14T11:42:13.299215" elapsed="0.000127"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:13.634590" level="INFO">sw1$ bridge link show master br0 | grep -c 'state forwarding'
+4
+</msg>
+<msg time="2026-10-14T11:42:13.634778" level="INFO">${ports} = 4</msg>
+<var>${ports}</var>
+<arg>${SWITCH}</arg>
+<arg>bridge link show master br0 | grep -c 'state forwarding'</arg>
+<status status="PASS" start="2026-10-14T11:42:13.299398" elapsed="0.335411"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${ports}</arg>
+<arg>4</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:13.635026" elapsed="0.000366"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:13.799116" level="INFO">sw1$ cat /sys/class/net/br0/mtu
+9000
+</msg>
+<msg time="2026-10-14T11:42:13.799288" level="INFO">${mtu} = 9000</msg>
+<var>${mtu}</var>
+<arg>${SWITCH}</arg>
+<arg>cat /sys/class/net/br0/mtu</arg>
+<status status="PASS" start="2026-10-14T11:42:13.635475" elapsed="0.163834"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${mtu}</arg>
+<arg>9000</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:13.799459" elapsed="0.000275"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:13.972873" level="INFO">sw1$ cat /run/sw-qos.state
+SW_QOS_MODE=prio
+SW_QOS_RATE=1gbit
+SW_QOS_LIMIT=200
+</msg>
+<msg time="2026-10-14T11:42:13.973065" level="INFO">${state} = SW_QOS_MODE=prio
+SW_QOS_RATE=1gbit
+SW_QOS_LIMIT=200</msg>
+<var>${state}</var>
+<arg>${SWITCH}</arg>
+<arg>cat /run/sw-qos.state</arg>
+<status status="PASS" start="2026-10-14T11:42:13.799802" elapsed="0.173296"/>
+</kw>
+<kw name="Should Contain" owner="BuiltIn">
+<arg>${state}</arg>
+<arg>SW_QOS_MODE=${inv}[switch][qos][mode]</arg>
+<doc>Fails if the `container` does not contain the `item` one or more times.</doc>
+<status status="PASS" start="2026-10-14T11:42:13.973267" elapsed="0.000465"/>
+</kw>
+<kw name="Should Contain" owner="BuiltIn">
+<arg>${state}</arg>
+<arg>SW_QOS_RATE=${inv}[switch][qos][rate]</arg>
+<doc>Fails if the `container` does not contain the `item` one or more times.</doc>
+<status status="PASS" start="2026-10-14T11:42:13.973825" elapsed="0.000286"/>
+</kw>
+<kw name="Switch Qos Stats" owner="HomaLab">
+<msg time="2026-10-14T11:42:14.187761" level="INFO">${stats} = {'eth1': {'mode': 'prio', 'prio': {'7': {'packets': 2267, 'bytes': 264296, 'drops': 0, 'backlog': 0, 'qlen': 0}, '5': {'packets': 0, 'bytes': 0, 'drops': 0, 'backlog': 0, 'qlen': 0}, '3': {'packets': ...</msg>
+<var>${stats}</var>
+<status status="PASS" start="2026-10-14T11:42:13.974214" elapsed="0.213586"/>
+</kw>
+<for flavor="IN">
+<iter>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${stats}[${p}][mode]</arg>
+<arg>${inv}[switch][qos][mode]</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:14.188085" elapsed="0.000326"/>
+</kw>
+<var name="${p}">eth1</var>
+<status status="PASS" start="2026-10-14T11:42:14.187974" elapsed="0.000465"/>
+</iter>
+<iter>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${stats}[${p}][mode]</arg>
+<arg>${inv}[switch][qos][mode]</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:14.188598" elapsed="0.000196"/>
+</kw>
+<var name="${p}">eth2</var>
+<status status="PASS" start="2026-10-14T11:42:14.188521" elapsed="0.000302"/>
+</iter>
+<iter>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${stats}[${p}][mode]</arg>
+<arg>${inv}[switch][qos][mode]</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:14.188943" elapsed="0.000186"/>
+</kw>
+<var name="${p}">eth3</var>
+<status status="PASS" start="2026-10-14T11:42:14.188873" elapsed="0.000280"/>
+</iter>
+<iter>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${stats}[${p}][mode]</arg>
+<arg>${inv}[switch][qos][mode]</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:14.189286" elapsed="0.000179"/>
+</kw>
+<var name="${p}">eth4</var>
+<status status="PASS" start="2026-10-14T11:42:14.189215" elapsed="0.000273"/>
+</iter>
+<var>${p}</var>
+<value>eth1</value>
+<value>eth2</value>
+<value>eth3</value>
+<value>eth4</value>
+<status status="PASS" start="2026-10-14T11:42:14.187867" elapsed="0.001642"/>
+</for>
+<status status="PASS" start="2026-10-14T11:42:13.298977" elapsed="0.890627"/>
+</test>
+<doc>The build under test: every host boots the pinned mainline kernel and runs the homa.ko built for it, the
+module's own unit tests passed when the image was built, the lab's settings are in place, and sw1 is a
+4-port bridge with the configured egress policy.</doc>
+<status status="PASS" start="2026-10-14T11:42:00.133529" elapsed="14.056348"/>
+</suite>
+<suite id="s1-s2" name="02 Function" source="/home/dcantor/homa-lab/tests/suites/02_function.robot">
+<kw name="Lab Setup" owner="common" type="SETUP">
+<kw name="Homa Hosts" owner="HomaLab">
+<msg time="2026-10-14T11:42:14.192155" level="INFO">${hosts} = ['h1', 'h2', 'h3', 'h4']</msg>
+<var>${hosts}</var>
+<status status="PASS" start="2026-10-14T11:42:14.192075" elapsed="0.000099"/>
+</kw>
+<kw name="Set Global Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:42:14.192501" level="INFO">@{HOSTS} = [ h1 | h2 | h3 | h4 ]</msg>
+<arg>@{HOSTS}</arg>
+<arg>@{hosts}</arg>
+<doc>Makes the variable available globally in all tests and suites.</doc>
+<status status="PASS" start="2026-10-14T11:42:14.192265" elapsed="0.000266"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:14.191960" elapsed="0.000612"/>
+</kw>
+<test id="s1-s2-t1" name="Jumbo frames cross sw1 unfragmented between every pair, IPv4 and IPv6" line="11">
+<for flavor="IN">
+<iter>
+<for flavor="IN">
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="PASS" start="2026-10-14T11:42:14.193225" elapsed="0.000036"/>
+</continue>
+<status status="PASS" start="2026-10-14T11:42:14.193107" elapsed="0.000180"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:14.193088" elapsed="0.000218"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:14.193390" elapsed="0.000015"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:14.193458" elapsed="0.000012"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:14.193521" elapsed="0.000013"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:14.193577" elapsed="0.000012"/>
+</kw>
+<var name="${b}">h1</var>
+<status status="PASS" start="2026-10-14T11:42:14.193056" elapsed="0.000552"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:14.193822" elapsed="0.000011"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:14.193738" elapsed="0.000114"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:14.193719" elapsed="0.000147"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:14.194017" level="INFO">${ip} = 192.168.80.12</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:14.193916" elapsed="0.000118"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:14.194224" level="INFO">${ip6} = fd00:80::12</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:14.194087" elapsed="0.000156"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:14.568695" level="INFO">h1$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.12
+PING 192.168.80.12 (192.168.80.12) 8972(9000) bytes of data.
+
+--- 192.168.80.12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 203ms
+rtt min/avg/max/mdev = 0.511/0.567/0.624/0.056 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:14.194295" elapsed="0.374502"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:14.952747" level="INFO">h1$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::12
+PING fd00:80::12 (fd00:80::12) 8952 data bytes
+
+--- fd00:80::12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 206ms
+rtt min/avg/max/mdev = 0.483/0.499/0.515/0.016 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:14.568929" elapsed="0.383919"/>
+</kw>
+<var name="${b}">h2</var>
+<status status="PASS" start="2026-10-14T11:42:14.193691" elapsed="0.759202"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:14.953222" elapsed="0.000018"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:14.953104" elapsed="0.000164"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:14.953087" elapsed="0.000202"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:14.953527" level="INFO">${ip} = 192.168.80.13</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:14.953390" elapsed="0.000162"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:14.953776" level="INFO">${ip6} = fd00:80::13</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:14.953626" elapsed="0.000169"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:15.336839" level="INFO">h1$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.13
+PING 192.168.80.13 (192.168.80.13) 8972(9000) bytes of data.
+
+--- 192.168.80.13 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 202ms
+rtt min/avg/max/mdev = 0.498/0.538/0.578/0.040 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:14.953852" elapsed="0.383084"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:15.728887" level="INFO">h1$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::13
+PING fd00:80::13 (fd00:80::13) 8952 data bytes
+
+--- fd00:80::13 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 209ms
+rtt min/avg/max/mdev = 0.519/0.526/0.533/0.007 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:15.337064" elapsed="0.391944"/>
+</kw>
+<var name="${b}">h3</var>
+<status status="PASS" start="2026-10-14T11:42:14.953051" elapsed="0.776004"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:15.729401" elapsed="0.000012"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:15.729299" elapsed="0.000134"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:15.729282" elapsed="0.000166"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:15.729670" level="INFO">${ip} = 192.168.80.14</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:15.729538" elapsed="0.000157"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:15.729894" level="INFO">${ip6} = fd00:80::14</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:15.729754" elapsed="0.000158"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:16.112898" level="INFO">h1$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.14
+PING 192.168.80.14 (192.168.80.14) 8972(9000) bytes of data.
+
+--- 192.168.80.14 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 204ms
+rtt min/avg/max/mdev = 0.506/0.533/0.560/0.027 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:15.729966" elapsed="0.383071"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:16.488847" level="INFO">h1$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::14
+PING fd00:80::14 (fd00:80::14) 8952 data bytes
+
+--- fd00:80::14 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 201ms
+rtt min/avg/max/mdev = 0.546/0.566/0.587/0.020 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:16.113224" elapsed="0.375726"/>
+</kw>
+<var name="${b}">h4</var>
+<status status="PASS" start="2026-10-14T11:42:15.729245" elapsed="0.759754"/>
+</iter>
+<var>${b}</var>
+<value>@{HOSTS}</value>
+<status status="PASS" start="2026-10-14T11:42:14.192964" elapsed="2.296066"/>
+</for>
+<var name="${a}">h1</var>
+<status status="PASS" start="2026-10-14T11:42:14.192946" elapsed="2.296113"/>
+</iter>
+<iter>
+<for flavor="IN">
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:16.489593" elapsed="0.000013"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:16.489489" elapsed="0.000138"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:16.489471" elapsed="0.000178"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:16.489892" level="INFO">${ip} = 192.168.80.11</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:16.489752" elapsed="0.000166"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:16.490131" level="INFO">${ip6} = fd00:80::11</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:16.489981" elapsed="0.000169"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:16.882146" level="INFO">h2$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.11
+PING 192.168.80.11 (192.168.80.11) 8972(9000) bytes of data.
+
+--- 192.168.80.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 202ms
+rtt min/avg/max/mdev = 0.502/0.520/0.538/0.018 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:16.490233" elapsed="0.392078"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:17.273808" level="INFO">h2$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::11
+PING fd00:80::11 (fd00:80::11) 8952 data bytes
+
+--- fd00:80::11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 201ms
+rtt min/avg/max/mdev = 0.485/0.490/0.496/0.005 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:16.882531" elapsed="0.391381"/>
+</kw>
+<var name="${b}">h1</var>
+<status status="PASS" start="2026-10-14T11:42:16.489435" elapsed="0.784521"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="PASS" start="2026-10-14T11:42:17.274302" elapsed="0.000035"/>
+</continue>
+<status status="PASS" start="2026-10-14T11:42:17.274169" elapsed="0.000194"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:17.274149" elapsed="0.000233"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:17.274479" elapsed="0.000018"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:17.274550" elapsed="0.000013"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:17.274614" elapsed="0.000013"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:17.274671" elapsed="0.000013"/>
+</kw>
+<var name="${b}">h2</var>
+<status status="PASS" start="2026-10-14T11:42:17.274113" elapsed="0.000591"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:17.274908" elapsed="0.000011"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:17.274836" elapsed="0.000100"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:17.274824" elapsed="0.000126"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:17.275130" level="INFO">${ip} = 192.168.80.13</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:17.274998" elapsed="0.000152"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:17.275383" level="INFO">${ip6} = fd00:80::13</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:17.275235" elapsed="0.000167"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:17.665764" level="INFO">h2$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.13
+PING 192.168.80.13 (192.168.80.13) 8972(9000) bytes of data.
+
+--- 192.168.80.13 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 208ms
+rtt min/avg/max/mdev = 0.478/0.513/0.548/0.035 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:17.275456" elapsed="0.390406"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:18.057844" level="INFO">h2$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::13
+PING fd00:80::13 (fd00:80::13) 8952 data bytes
+
+--- fd00:80::13 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 205ms
+rtt min/avg/max/mdev = 0.463/0.545/0.628/0.082 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:17.665984" elapsed="0.391997"/>
+</kw>
+<var name="${b}">h3</var>
+<status status="PASS" start="2026-10-14T11:42:17.274802" elapsed="0.783242"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:18.058526" elapsed="0.000021"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:18.058379" elapsed="0.000203"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:18.058356" elapsed="0.000254"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:18.058929" level="INFO">${ip} = 192.168.80.14</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:18.058743" elapsed="0.000213"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:18.059250" level="INFO">${ip6} = fd00:80::14</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:18.059039" elapsed="0.000241"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:18.441750" level="INFO">h2$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.14
+PING 192.168.80.14 (192.168.80.14) 8972(9000) bytes of data.
+
+--- 192.168.80.14 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 208ms
+rtt min/avg/max/mdev = 0.529/0.533/0.537/0.004 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:18.059375" elapsed="0.382512"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:18.817914" level="INFO">h2$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::14
+PING fd00:80::14 (fd00:80::14) 8952 data bytes
+
+--- fd00:80::14 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 203ms
+rtt min/avg/max/mdev = 0.518/0.535/0.552/0.017 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:18.442031" elapsed="0.375981"/>
+</kw>
+<var name="${b}">h4</var>
+<status status="PASS" start="2026-10-14T11:42:18.058306" elapsed="0.759749"/>
+</iter>
+<var>${b}</var>
+<value>@{HOSTS}</value>
+<status status="PASS" start="2026-10-14T11:42:16.489293" elapsed="2.328789"/>
+</for>
+<var name="${a}">h2</var>
+<status status="PASS" start="2026-10-14T11:42:16.489258" elapsed="2.328858"/>
+</iter>
+<iter>
+<for flavor="IN">
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:18.818595" elapsed="0.000013"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:18.818493" elapsed="0.000135"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:18.818479" elapsed="0.000164"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:18.818860" level="INFO">${ip} = 192.168.80.11</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:18.818729" elapsed="0.000154"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:18.819077" level="INFO">${ip6} = fd00:80::11</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:18.818941" elapsed="0.000153"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:19.201136" level="INFO">h3$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.11
+PING 192.168.80.11 (192.168.80.11) 8972(9000) bytes of data.
+
+--- 192.168.80.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 203ms
+rtt min/avg/max/mdev = 0.492/0.532/0.572/0.040 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:18.819149" elapsed="0.382104"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:19.585049" level="INFO">h3$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::11
+PING fd00:80::11 (fd00:80::11) 8952 data bytes
+
+--- fd00:80::11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 205ms
+rtt min/avg/max/mdev = 0.501/0.555/0.609/0.054 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:19.201381" elapsed="0.383771"/>
+</kw>
+<var name="${b}">h1</var>
+<status status="PASS" start="2026-10-14T11:42:18.818449" elapsed="0.766759"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:19.585547" elapsed="0.000011"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:19.585446" elapsed="0.000132"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:19.585427" elapsed="0.000186"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:19.585838" level="INFO">${ip} = 192.168.80.12</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:19.585703" elapsed="0.000154"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:19.586050" level="INFO">${ip6} = fd00:80::12</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:19.585914" elapsed="0.000152"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:19.969378" level="INFO">h3$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.12
+PING 192.168.80.12 (192.168.80.12) 8972(9000) bytes of data.
+
+--- 192.168.80.12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 206ms
+rtt min/avg/max/mdev = 0.510/0.527/0.545/0.017 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:19.586121" elapsed="0.383367"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:20.353151" level="INFO">h3$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::12
+PING fd00:80::12 (fd00:80::12) 8952 data bytes
+
+--- fd00:80::12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 204ms
+rtt min/avg/max/mdev = 0.485/0.506/0.527/0.021 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:19.969622" elapsed="0.383658"/>
+</kw>
+<var name="${b}">h2</var>
+<status status="PASS" start="2026-10-14T11:42:19.585380" elapsed="0.767947"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="PASS" start="2026-10-14T11:42:20.353643" elapsed="0.000028"/>
+</continue>
+<status status="PASS" start="2026-10-14T11:42:20.353542" elapsed="0.000154"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:20.353524" elapsed="0.000190"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:20.353805" elapsed="0.000018"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:20.353876" elapsed="0.000013"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:20.353938" elapsed="0.000011"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:20.353999" elapsed="0.000013"/>
+</kw>
+<var name="${b}">h3</var>
+<status status="PASS" start="2026-10-14T11:42:20.353487" elapsed="0.000544"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:20.354236" elapsed="0.000013"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:20.354155" elapsed="0.000120"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:20.354145" elapsed="0.000153"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:20.354489" level="INFO">${ip} = 192.168.80.14</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:20.354355" elapsed="0.000152"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:20.354693" level="INFO">${ip6} = fd00:80::14</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:20.354561" elapsed="0.000148"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:20.728980" level="INFO">h3$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.14
+PING 192.168.80.14 (192.168.80.14) 8972(9000) bytes of data.
+
+--- 192.168.80.14 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 201ms
+rtt min/avg/max/mdev = 0.510/0.570/0.630/0.060 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:20.354761" elapsed="0.374314"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:21.105149" level="INFO">h3$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::14
+PING fd00:80::14 (fd00:80::14) 8952 data bytes
+
+--- fd00:80::14 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 204ms
+rtt min/avg/max/mdev = 0.538/0.570/0.603/0.032 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:20.729245" elapsed="0.376034"/>
+</kw>
+<var name="${b}">h4</var>
+<status status="PASS" start="2026-10-14T11:42:20.354124" elapsed="0.751213"/>
+</iter>
+<var>${b}</var>
+<value>@{HOSTS}</value>
+<status status="PASS" start="2026-10-14T11:42:18.818324" elapsed="2.287044"/>
+</for>
+<var name="${a}">h3</var>
+<status status="PASS" start="2026-10-14T11:42:18.818291" elapsed="2.287106"/>
+</iter>
+<iter>
+<for flavor="IN">
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:21.105908" elapsed="0.000012"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:21.105809" elapsed="0.000130"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:21.105795" elapsed="0.000158"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:21.106173" level="INFO">${ip} = 192.168.80.11</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:21.106043" elapsed="0.000163"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:21.106453" level="INFO">${ip6} = fd00:80::11</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:21.106294" elapsed="0.000184"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:21.487922" level="INFO">h4$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.11
+PING 192.168.80.11 (192.168.80.11) 8972(9000) bytes of data.
+
+--- 192.168.80.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 206ms
+rtt min/avg/max/mdev = 0.508/0.591/0.675/0.083 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:21.106543" elapsed="0.381511"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:21.863979" level="INFO">h4$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::11
+PING fd00:80::11 (fd00:80::11) 8952 data bytes
+
+--- fd00:80::11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 205ms
+rtt min/avg/max/mdev = 0.492/0.521/0.550/0.029 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:21.488237" elapsed="0.375858"/>
+</kw>
+<var name="${b}">h1</var>
+<status status="PASS" start="2026-10-14T11:42:21.105763" elapsed="0.758394"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:21.864638" elapsed="0.000017"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:21.864491" elapsed="0.000194"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:21.864467" elapsed="0.000246"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:21.865046" level="INFO">${ip} = 192.168.80.12</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:21.864842" elapsed="0.000236"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:21.865405" level="INFO">${ip6} = fd00:80::12</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:21.865178" elapsed="0.000255"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:22.248070" level="INFO">h4$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.12
+PING 192.168.80.12 (192.168.80.12) 8972(9000) bytes of data.
+
+--- 192.168.80.12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 206ms
+rtt min/avg/max/mdev = 0.506/0.579/0.653/0.073 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:21.865533" elapsed="0.382682"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:22.623832" level="INFO">h4$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::12
+PING fd00:80::12 (fd00:80::12) 8952 data bytes
+
+--- fd00:80::12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 201ms
+rtt min/avg/max/mdev = 0.535/0.581/0.628/0.046 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:22.248363" elapsed="0.375576"/>
+</kw>
+<var name="${b}">h2</var>
+<status status="PASS" start="2026-10-14T11:42:21.864412" elapsed="0.759576"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="NOT RUN" start="2026-10-14T11:42:22.624422" elapsed="0.000015"/>
+</continue>
+<status status="NOT RUN" start="2026-10-14T11:42:22.624273" elapsed="0.000188"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:22.624251" elapsed="0.000233"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:22.624751" level="INFO">${ip} = 192.168.80.13</msg>
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="PASS" start="2026-10-14T11:42:22.624595" elapsed="0.000179"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<msg time="2026-10-14T11:42:22.624984" level="INFO">${ip6} = fd00:80::13</msg>
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="PASS" start="2026-10-14T11:42:22.624838" elapsed="0.000164"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:22.999900" level="INFO">h4$ ping -q -c2 -i0.2 -W1 -M do -s 8972 192.168.80.13
+PING 192.168.80.13 (192.168.80.13) 8972(9000) bytes of data.
+
+--- 192.168.80.13 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 206ms
+rtt min/avg/max/mdev = 0.556/0.562/0.568/0.006 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="PASS" start="2026-10-14T11:42:22.625059" elapsed="0.374932"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:23.375805" level="INFO">h4$ ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 fd00:80::13
+PING fd00:80::13 (fd00:80::13) 8952 data bytes
+
+--- fd00:80::13 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 208ms
+rtt min/avg/max/mdev = 0.491/0.515/0.540/0.024 ms
+</msg>
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="PASS" start="2026-10-14T11:42:23.000124" elapsed="0.375804"/>
+</kw>
+<var name="${b}">h3</var>
+<status status="PASS" start="2026-10-14T11:42:22.624173" elapsed="0.751814"/>
+</iter>
+<iter>
+<if>
+<branch type="IF" condition="'${a}' == '${b}'">
+<continue>
+<status status="PASS" start="2026-10-14T11:42:23.376436" elapsed="0.000041"/>
+</continue>
+<status status="PASS" start="2026-10-14T11:42:23.376295" elapsed="0.000217"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:42:23.376271" elapsed="0.000268"/>
+</if>
+<kw name="Data Ip" owner="HomaLab">
+<var>${ip}</var>
+<arg>${b}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:23.376662" elapsed="0.000024"/>
+</kw>
+<kw name="Data Ip" owner="HomaLab">
+<var>${ip6}</var>
+<arg>${b}</arg>
+<arg>ipv6=${True}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:23.376766" elapsed="0.000018"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<arg>${a}</arg>
+<arg>ping -q -c2 -i0.2 -W1 -M do -s 8972 ${ip}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:23.376848" elapsed="0.000013"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<arg>${a}</arg>
+<arg>ping -6 -q -c2 -i0.2 -W1 -M do -s 8952 ${ip6}</arg>
+<status status="NOT RUN" start="2026-10-14T11:42:23.376919" elapsed="0.000014"/>
+</kw>
+<var name="${b}">h4</var>
+<status status="PASS" start="2026-10-14T11:42:23.376220" elapsed="0.000737"/>
+</iter>
+<var>${b}</var>
+<value>@{HOSTS}</value>
+<status status="PASS" start="2026-10-14T11:42:21.105608" elapsed="2.271375"/>
+</for>
+<var name="${a}">h4</var>
+<status status="PASS" start="2026-10-14T11:42:21.105575" elapsed="2.271440"/>
+</iter>
+<var>${a}</var>
+<value>@{HOSTS}</value>
+<status status="PASS" start="2026-10-14T11:42:14.192800" elapsed="9.184238"/>
+</for>
+<status status="PASS" start="2026-10-14T11:42:14.192609" elapsed="9.184514"/>
+</test>
+<test id="s1-s2-t2" name="A Homa round trip succeeds between every pair of hosts, IPv4 and IPv6, 100 B and 100 KB" line="22">
+<kw name="Homa Rtt Matrix" owner="HomaLab">
+<msg time="2026-10-14T11:42:33.552945" level="INFO">h1-&gt;h2 v4 100 B: p50 229.31 us
+h1-&gt;h2 v4 100000 B: p50 970.03 us
+h1-&gt;h2 v6 100 B: p50 144.49 us
+h1-&gt;h2 v6 100000 B: p50 1250.15 us
+h1-&gt;h3 v4 100 B: p50 179.69 us
+h1-&gt;h3 v4 100000 B: p50 1411.26 us
+h1-&gt;h3 v6 100 B: p50 146.57 us
+h1-&gt;h3 v6 100000 B: p50 1008.26 us
+h1-&gt;h4 v4 100 B: p50 174.47 us
+h1-&gt;h4 v4 100000 B: p50 1052.74 us
+h1-&gt;h4 v6 100 B: p50 137.34 us
+h1-&gt;h4 v6 100000 B: p50 930.54 us
+h2-&gt;h1 v4 100 B: p50 155.15 us
+h2-&gt;h1 v4 100000 B: p50 1209.25 us
+h2-&gt;h1 v6 100 B: p50 141.16 us
+h2-&gt;h1 v6 100000 B: p50 812.47 us
+h2-&gt;h3 v4 100 B: p50 148.89 us
+h2-&gt;h3 v4 100000 B: p50 810.59 us
+h2-&gt;h3 v6 100 B: p50 144.22 us
+h2-&gt;h3 v6 100000 B: p50 957.47 us
+h2-&gt;h4 v4 100 B: p50 131.81 us
+h2-&gt;h4 v4 100000 B: p50 899.77 us
+h2-&gt;h4 v6 100 B: p50 127.5 us
+h2-&gt;h4 v6 100000 B: p50 819.69 us
+h3-&gt;h1 v4 100 B: p50 139.21 us
+h3-&gt;h1 v4 100000 B: p50 866.79 us
+h3-&gt;h1 v6 100 B: p50 132.91 us
+h3-&gt;h1 v6 100000 B: p50 1014.38 us
+h3-&gt;h2 v4 100 B: p50 265.41 us
+h3-&gt;h2 v4 100000 B: p50 809.62 us
+h3-&gt;h2 v6 100 B: p50 135.24 us
+h3-&gt;h2 v6 100000 B: p50 953.98 us
+h3-&gt;h4 v4 100 B: p50 127.09 us
+h3-&gt;h4 v4 100000 B: p50 891.07 us
+h3-&gt;h4 v6 100 B: p50 138.04 us
+h3-&gt;h4 v6 100000 B: p50 810.35 us
+h4-&gt;h1 v4 100 B: p50 142.81 us
+h4-&gt;h1 v4 100000 B: p50 915.27 us
+h4-&gt;h1 v6 100 B: p50 139.04 us
+h4-&gt;h1 v6 100000 B: p50 884.14 us
+h4-&gt;h2 v4 100 B: p50 144.41 us
+h4-&gt;h2 v4 100000 B: p50 813.9 us
+h4-&gt;h2 v6 100 B: p50 127.81 us
+h4-&gt;h2 v6 100000 B: p50 908.81 us
+h4-&gt;h3 v4 100 B: p50 127.72 us
+h4-&gt;h3 v4 100000 B: p50 810.02 us
+h4-&gt;h3 v6 100 B: p50 126.1 us
+h4-&gt;h3 v6 100000 B: p50 1179.79 us</msg>
+<msg time="2026-10-14T11:42:33.553054" level="INFO">h1 -&gt; h2 v4     100 B  p50    229.3 us  p90    274.5 us
+  h1 -&gt; h2 v4  100000 B  p50    970.0 us  p90   1038.8 us
+  h1 -&gt; h2 v6     100 B  p50    144.5 us  p90    216.8 us
+  h1 -&gt; h2 v6  100000 B  p50   1250.2 us  p90   1306.2 us
+  h1 -&gt; h3 v4     100 B  p50    179.7 us  p90    214.9 us
+  h1 -&gt; h3 v4  100000 B  p50   1411.3 us  p90   1553.9 us
+  h1 -&gt; h3 v6     100 B  p50    146.6 us  p90    171.8 us
+  h1 -&gt; h3 v6  100000 B  p50   1008.3 us  p90   1389.6 us
+  h1 -&gt; h4 v4     100 B  p50    174.5 us  p90    202.6 us
+  h1 -&gt; h4 v4  100000 B  p50   1052.7 us  p90   1104.4 us
+  h1 -&gt; h4 v6     100 B  p50    137.3 us  p90    161.2 us
+  h1 -&gt; h4 v6  100000 B  p50    930.5 us  p90   1010.6 us
+  h2 -&gt; h1 v4     100 B  p50    155.2 us  p90    226.6 us
+  h2 -&gt; h1 v4  100000 B  p50   1209.2 us  p90   1373.6 us
+  h2 -&gt; h1 v6     100 B  p50    141.2 us  p90    230.9 us
+  h2 -&gt; h1 v6  100000 B  p50    812.5 us  p90    836.4 us
+  h2 -&gt; h3 v4     100 B  p50    148.9 us  p90    178.4 us
+  h2 -&gt; h3 v4  100000 B  p50    810.6 us  p90    820.5 us
+  h2 -&gt; h3 v6     100 B  p50    144.2 us  p90    163.0 us
+  h2 -&gt; h3 v6  100000 B  p50    957.5 us  p90   1052.6 us
+  h2 -&gt; h4 v4     100 B  p50    131.8 us  p90    165.1 us
+  h2 -&gt; h4 v4  100000 B  p50    899.8 us  p90    950.8 us
+  h2 -&gt; h4 v6     100 B  p50    127.5 us  p90    181.8 us
+  h2 -&gt; h4 v6  100000 B  p50    819.7 us  p90    850.3 us
+  h3 -&gt; h1 v4     100 B  p50    139.2 us  p90    263.8 us
+  h3 -&gt; h1 v4  100000 B  p50    866.8 us  p90    950.4 us
+  h3 -&gt; h1 v6     100 B  p50    132.9 us  p90    165.2 us
+  h3 -&gt; h1 v6  100000 B  p50   1014.4 us  p90   1208.1 us
+  h3 -&gt; h2 v4     100 B  p50    265.4 us  p90    328.8 us
+  h3 -&gt; h2 v4  100000 B  p50    809.6 us  p90    824.7 us
+  h3 -&gt; h2 v6     100 B  p50    135.2 us  p90    194.9 us
+  h3 -&gt; h2 v6  100000 B  p50    954.0 us  p90   1066.0 us
+  h3 -&gt; h4 v4     100 B  p50    127.1 us  p90    149.1 us
+  h3 -&gt; h4 v4  100000 B  p50    891.1 us  p90    945.6 us
+  h3 -&gt; h4 v6     100 B  p50    138.0 us  p90    181.1 us
+  h3 -&gt; h4 v6  100000 B  p50    810.4 us  p90    829.4 us
+  h4 -&gt; h1 v4     100 B  p50    142.8 us  p90    157.8 us
+  h4 -&gt; h1 v4  100000 B  p50    915.3 us  p90    981.4 us
+  h4 -&gt; h1 v6     100 B  p50    139.0 us  p90    167.3 us
+  h4 -&gt; h1 v6  100000 B  p50    884.1 us  p90   1014.9 us
+  h4 -&gt; h2 v4     100 B  p50    144.4 us  p90    211.4 us
+  h4 -&gt; h2 v4  100000 B  p50    813.9 us  p90    842.2 us
+  h4 -&gt; h2 v6     100 B  p50    127.8 us  p90    167.0 us
+  h4 -&gt; h2 v6  100000 B  p50    908.8 us  p90    968.3 us
+  h4 -&gt; h3 v4     100 B  p50    127.7 us  p90    165.6 us
+  h4 -&gt; h3 v4  100000 B  p50    810.0 us  p90    833.1 us
+  h4 -&gt; h3 v6     100 B  p50    126.1 us  p90    147.1 us
+  h4 -&gt; h3 v6  100000 B  p50   1179.8 us  p90   1309.3 us
+  48/48 Homa RTT tests ok</msg>
+<msg time="2026-10-14T11:42:33.553451" level="INFO">${r} = {'ok': True, 'passed': 48, 'total': 48, 'results': [{'src': 'h1', 'dst': 'h2', 'ipv6': False, 'length': 100, 'count': 20, 'rc': 0, 'errors': [], 'min': 185.01, 'p10': 212.87, 'p20': 217.83, 'p30': 218...</msg>
+<msg time="2026-10-14T11:42:33.553489" level="INFO">${bad} = []</msg>
+<var>${r}</var>
+<var>${bad}</var>
+<arg>count=20</arg>
+<status status="PASS" start="2026-10-14T11:42:23.377609" elapsed="10.175899"/>
+</kw>
+<kw name="Should Be Empty" owner="BuiltIn">
+<msg time="2026-10-14T11:42:33.553942" level="INFO">Length is 0.</msg>
+<arg>${bad}</arg>
+<arg>msg=failed: ${bad}</arg>
+<doc>Verifies that the given item is empty.</doc>
+<status status="PASS" start="2026-10-14T11:42:33.553629" elapsed="0.000353"/>
+</kw>
+<kw name="Should Be Equal As Integers" owner="BuiltIn">
+<msg time="2026-10-14T11:42:33.554274" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${r}[total]</arg>
+<arg>48</arg>
+<doc>Fails if objects are unequal after converting them to integers.</doc>
+<status status="PASS" start="2026-10-14T11:42:33.554061" elapsed="0.000271"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:23.377301" elapsed="10.177106"/>
+</test>
+<test id="s1-s2-t3" name="Message sizes from 8 bytes to the 1 MB maximum arrive intact" line="27">
+<for flavor="IN">
+<iter>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:33.755332" level="INFO">{
+ "src": "h1",
+ "dst": "h3",
+ "ipv6": false,
+ "length": 8,
+ "count": 10,
+ "rc": 0,
+ "errors": [],
+ "min": 123.71,
+ "p10": 125.48,
+ "p20": 142.42,
+ "p30": 145.68,
+ "p40": 146.64,
+ "p50": 155.66,
+ "p60": 163.86,
+ "p70": 172.79,
+ "p80": 178.93,
+ "p90": 215.37,
+ "max": 215.37,
+ "avg": 157.05,
+ "ok": true
+}</msg>
+<msg time="2026-10-14T11:42:33.755473" level="INFO">${r} = {'src': 'h1', 'dst': 'h3', 'ipv6': False, 'length': 8, 'count': 10, 'rc': 0, 'errors': [], 'min': 123.71, 'p10': 125.48, 'p20': 142.42, 'p30': 145.68, 'p40': 146.64, 'p50': 155.66, 'p60': 163.86, 'p70...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h3</arg>
+<arg>length=${len}</arg>
+<arg>count=10</arg>
+<status status="PASS" start="2026-10-14T11:42:33.554866" elapsed="0.200628"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=${len} B: ${r}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:33.755627" elapsed="0.000359"/>
+</kw>
+<var name="${len}">8</var>
+<status status="PASS" start="2026-10-14T11:42:33.554813" elapsed="0.201201"/>
+</iter>
+<iter>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:33.962052" level="INFO">{
+ "src": "h1",
+ "dst": "h3",
+ "ipv6": false,
+ "length": 1400,
+ "count": 10,
+ "rc": 0,
+ "errors": [],
+ "min": 124.29,
+ "p10": 125.45,
+ "p20": 137.57,
+ "p30": 141.12,
+ "p40": 142.17,
+ "p50": 146.62,
+ "p60": 163.77,
+ "p70": 184.52,
+ "p80": 211.54,
+ "p90": 212.63,
+ "max": 212.63,
+ "avg": 158.97,
+ "ok": true
+}</msg>
+<msg time="2026-10-14T11:42:33.962250" level="INFO">${r} = {'src': 'h1', 'dst': 'h3', 'ipv6': False, 'length': 1400, 'count': 10, 'rc': 0, 'errors': [], 'min': 124.29, 'p10': 125.45, 'p20': 137.57, 'p30': 141.12, 'p40': 142.17, 'p50': 146.62, 'p60': 163.77, '...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h3</arg>
+<arg>length=${len}</arg>
+<arg>count=10</arg>
+<status status="PASS" start="2026-10-14T11:42:33.756152" elapsed="0.206130"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=${len} B: ${r}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:33.962478" elapsed="0.000475"/>
+</kw>
+<var name="${len}">1400</var>
+<status status="PASS" start="2026-10-14T11:42:33.756096" elapsed="0.206897"/>
+</iter>
+<iter>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:34.174142" level="INFO">{
+ "src": "h1",
+ "dst": "h3",
+ "ipv6": false,
+ "length": 8900,
+ "count": 10,
+ "rc": 0,
+ "errors": [],
+ "min": 159.27,
+ "p10": 177.41,
+ "p20": 186.17,
+ "p30": 191.41,
+ "p40": 193.23,
+ "p50": 196.85,
+ "p60": 207.16,
+ "p70": 208.59,
+ "p80": 231.28,
+ "p90": 258.69,
+ "max": 258.69,
+ "avg": 201.01,
+ "ok": true
+}</msg>
+<msg time="2026-10-14T11:42:34.174358" level="INFO">${r} = {'src': 'h1', 'dst': 'h3', 'ipv6': False, 'length': 8900, 'count': 10, 'rc': 0, 'errors': [], 'min': 159.27, 'p10': 177.41, 'p20': 186.17, 'p30': 191.41, 'p40': 193.23, 'p50': 196.85, 'p60': 207.16, '...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h3</arg>
+<arg>length=${len}</arg>
+<arg>count=10</arg>
+<status status="PASS" start="2026-10-14T11:42:33.963204" elapsed="0.211187"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=${len} B: ${r}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:34.174598" elapsed="0.000442"/>
+</kw>
+<var name="${len}">8900</var>
+<status status="PASS" start="2026-10-14T11:42:33.963110" elapsed="0.211969"/>
+</iter>
+<iter>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:34.371626" level="INFO">{
+ "src": "h1",
+ "dst": "h3",
+ "ipv6": false,
+ "length": 9000,
+ "count": 10,
+ "rc": 0,
+ "errors": [],
+ "min": 143.73,
+ "p10": 148.66,
+ "p20": 151.29,
+ "p30": 153.91,
+ "p40": 160.94,
+ "p50": 167.82,
+ "p60": 176.94,
+ "p70": 190.41,
+ "p80": 195.98,
+ "p90": 235.31,
+ "max": 235.31,
+ "avg": 172.5,
+ "ok": true
+}</msg>
+<msg time="2026-10-14T11:42:34.371775" level="INFO">${r} = {'src': 'h1', 'dst': 'h3', 'ipv6': False, 'length': 9000, 'count': 10, 'rc': 0, 'errors': [], 'min': 143.73, 'p10': 148.66, 'p20': 151.29, 'p30': 153.91, 'p40': 160.94, 'p50': 167.82, 'p60': 176.94, '...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h3</arg>
+<arg>length=${len}</arg>
+<arg>count=10</arg>
+<status status="PASS" start="2026-10-14T11:42:34.175258" elapsed="0.196538"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=${len} B: ${r}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:34.371933" elapsed="0.000387"/>
+</kw>
+<var name="${len}">9000</var>
+<status status="PASS" start="2026-10-14T11:42:34.175174" elapsed="0.197180"/>
+</iter>
+<iter>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:34.575170" level="INFO">{
+ "src": "h1",
+ "dst": "h3",
+ "ipv6": false,
+ "length": 40000,
+ "count": 10,
+ "rc": 0,
+ "errors": [],
+ "min": 272.66,
+ "p10": 279.51,
+ "p20": 285.16,
+ "p30": 287.62,
+ "p40": 302.38,
+ "p50": 304.36,
+ "p60": 320.36,
+ "p70": 389.68,
+ "p80": 399.46,
+ "p90": 406.77,
+ "max": 406.77,
+ "avg": 324.8,
+ "ok": true
+}</msg>
+<msg time="2026-10-14T11:42:34.575334" level="INFO">${r} = {'src': 'h1', 'dst': 'h3', 'ipv6': False, 'length': 40000, 'count': 10, 'rc': 0, 'errors': [], 'min': 272.66, 'p10': 279.51, 'p20': 285.16, 'p30': 287.62, 'p40': 302.38, 'p50': 304.36, 'p60': 320.36, ...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h3</arg>
+<arg>length=${len}</arg>
+<arg>count=10</arg>
+<status status="PASS" start="2026-10-14T11:42:34.372494" elapsed="0.202862"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=${len} B: ${r}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:34.575496" elapsed="0.000358"/>
+</kw>
+<var name="${len}">40000</var>
+<status status="PASS" start="2026-10-14T11:42:34.372436" elapsed="0.203448"/>
+</iter>
+<iter>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:34.781187" level="INFO">{
+ "src": "h1",
+ "dst": "h3",
+ "ipv6": false,
+ "length": 100000,
+ "count": 10,
+ "rc": 0,
+ "errors": [],
+ "min": 793.49,
+ "p10": 800.5,
+ "p20": 805.43,
+ "p30": 809.92,
+ "p40": 813.04,
+ "p50": 813.77,
+ "p60": 821.84,
+ "p70": 825.47,
+ "p80": 828.57,
+ "p90": 836.51,
+ "max": 836.51,
+ "avg": 814.85,
+ "ok": true
+}</msg>
+<msg time="2026-10-14T11:42:34.781376" level="INFO">${r} = {'src': 'h1', 'dst': 'h3', 'ipv6': False, 'length': 100000, 'count': 10, 'rc': 0, 'errors': [], 'min': 793.49, 'p10': 800.5, 'p20': 805.43, 'p30': 809.92, 'p40': 813.04, 'p50': 813.77, 'p60': 821.84, ...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h3</arg>
+<arg>length=${len}</arg>
+<arg>count=10</arg>
+<status status="PASS" start="2026-10-14T11:42:34.576021" elapsed="0.205381"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=${len} B: ${r}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:34.781607" elapsed="0.000455"/>
+</kw>
+<var name="${len}">100000</var>
+<status status="PASS" start="2026-10-14T11:42:34.575963" elapsed="0.206139"/>
+</iter>
+<iter>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:35.120938" level="INFO">{
+ "src": "h1",
+ "dst": "h3",
+ "ipv6": false,
+ "length": 500000,
+ "count": 10,
+ "rc": 0,
+ "errors": [],
+ "min": 7000.62,
+ "p10": 7155.21,
+ "p20": 7174.73,
+ "p30": 7177.49,
+ "p40": 7180.91,
+ "p50": 7191.93,
+ "p60": 7211.6,
+ "p70": 7221.87,
+ "p80": 7238.15,
+ "p90": 7255.23,
+ "max": 7255.23,
+ "avg": 7180.77,
+ "ok": true
+}</msg>
+<msg time="2026-10-14T11:42:35.121118" level="INFO">${r} = {'src': 'h1', 'dst': 'h3', 'ipv6': False, 'length': 500000, 'count': 10, 'rc': 0, 'errors': [], 'min': 7000.62, 'p10': 7155.21, 'p20': 7174.73, 'p30': 7177.49, 'p40': 7180.91, 'p50': 7191.93, 'p60': 7...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h3</arg>
+<arg>length=${len}</arg>
+<arg>count=10</arg>
+<status status="PASS" start="2026-10-14T11:42:34.782304" elapsed="0.338845"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=${len} B: ${r}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:35.121368" elapsed="0.000435"/>
+</kw>
+<var name="${len}">500000</var>
+<status status="PASS" start="2026-10-14T11:42:34.782220" elapsed="0.339622"/>
+</iter>
+<iter>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:35.624249" level="INFO">{
+ "src": "h1",
+ "dst": "h3",
+ "ipv6": false,
+ "length": 1000000,
+ "count": 10,
+ "rc": 0,
+ "errors": [],
+ "min": 15330.96,
+ "p10": 15375.9,
+ "p20": 15390.71,
+ "p30": 15395.33,
+ "p40": 15404.59,
+ "p50": 15408.65,
+ "p60": 15410.72,
+ "p70": 15483.63,
+ "p80": 15525.83,
+ "p90": 15570.76,
+ "max": 15570.76,
+ "avg": 15429.71,
+ "ok": true
+}</msg>
+<msg time="2026-10-14T11:42:35.624449" level="INFO">${r} = {'src': 'h1', 'dst': 'h3', 'ipv6': False, 'length': 1000000, 'count': 10, 'rc': 0, 'errors': [], 'min': 15330.96, 'p10': 15375.9, 'p20': 15390.71, 'p30': 15395.33, 'p40': 15404.59, 'p50': 15408.65, 'p...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h3</arg>
+<arg>length=${len}</arg>
+<arg>count=10</arg>
+<status status="PASS" start="2026-10-14T11:42:35.122000" elapsed="0.502481"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=${len} B: ${r}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:35.624675" elapsed="0.000428"/>
+</kw>
+<var name="${len}">1000000</var>
+<status status="PASS" start="2026-10-14T11:42:35.121937" elapsed="0.503202"/>
+</iter>
+<var>${len}</var>
+<value>8</value>
+<value>1400</value>
+<value>8900</value>
+<value>9000</value>
+<value>40000</value>
+<value>100000</value>
+<value>500000</value>
+<value>1000000</value>
+<status status="PASS" start="2026-10-14T11:42:33.554722" elapsed="2.070447"/>
+</for>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:35.801976" level="INFO">h3$ sudo journalctl -q -u homa-echo --since -5min --no-pager | grep -ci -E 'error|mismatch|invalid' || true
+0
+</msg>
+<msg time="2026-10-14T11:42:35.802118" level="INFO">${errors} = 0</msg>
+<var>${errors}</var>
+<arg>h3</arg>
+<arg>sudo journalctl -q -u homa-echo --since -5min --no-pager | grep -ci -E 'error|mismatch|invalid' || true</arg>
+<status status="PASS" start="2026-10-14T11:42:35.625282" elapsed="0.176857"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${errors}</arg>
+<arg>0</arg>
+<arg>msg=the echo server on h3 reported content errors</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:35.802321" elapsed="0.000301"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:33.554525" elapsed="2.248188"/>
+</test>
+<test id="s1-s2-t4" name="The module refuses to unload while Homa sockets are open" line="35">
+<kw name="Run On Rc" owner="HomaLab">
+<msg time="2026-10-14T11:42:35.973031" level="INFO">h4$ sudo modprobe -r homa -&gt; rc 1
+modprobe: FATAL: Module homa is in use.
+</msg>
+<msg time="2026-10-14T11:42:35.973252" level="INFO">${rc} = 1</msg>
+<msg time="2026-10-14T11:42:35.973298" level="INFO">${out} = modprobe: FATAL: Module homa is in use.</msg>
+<var>${rc}</var>
+<var>${out}</var>
+<arg>h4</arg>
+<arg>sudo modprobe -r homa</arg>
+<status status="PASS" start="2026-10-14T11:42:35.803078" elapsed="0.170247"/>
+</kw>
+<kw name="Should Not Be Equal As Integers" owner="BuiltIn">
+<msg time="2026-10-14T11:42:35.973817" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are equal after converting them to integers.</doc>
+<status status="PASS" start="2026-10-14T11:42:35.973508" elapsed="0.000365"/>
+</kw>
+<kw name="Should Contain" owner="BuiltIn">
+<arg>${out}</arg>
+<arg>in use</arg>
+<doc>Fails if the `container` does not contain the `item` one or more times.</doc>
+<status status="PASS" start="2026-10-14T11:42:35.973985" elapsed="0.000271"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:35.802859" elapsed="0.171492"/>
+</test>
+<test id="s1-s2-t5" name="The module unloads cleanly, and the first Homa socket loads it again" line="40">
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:36.172423" level="INFO">h4$ sudo systemctl stop homa-prio homa-echo homa-echo6 cp-homa cp-tcp cp-homa-probe cp-tcp-probe
+</msg>
+<arg>h4</arg>
+<arg>sudo systemctl stop ${SERVICES}[0] ${SERVICES}[1] ${SERVICES}[2] ${SERVICES}[3] ${SERVICES}[4] ${SERVICES}[5] ${SERVICES}[6]</arg>
+<status status="PASS" start="2026-10-14T11:42:35.974684" elapsed="0.197834"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:36.441743" level="INFO">h4$ sudo modprobe -r homa
+</msg>
+<arg>h4</arg>
+<arg>sudo modprobe -r homa</arg>
+<status status="PASS" start="2026-10-14T11:42:36.172643" elapsed="0.269208"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:36.615324" level="INFO">h4$ ! test -e /proc/net/homa_metrics &amp;&amp; ! lsmod | grep -q '^homa '
+</msg>
+<arg>h4</arg>
+<arg>! test -e /proc/net/homa_metrics &amp;&amp; ! lsmod | grep -q '^homa '</arg>
+<status status="PASS" start="2026-10-14T11:42:36.441987" elapsed="0.173438"/>
+</kw>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:36.791327" level="INFO">{
+ "src": "h1",
+ "dst": "h4",
+ "ipv6": false,
+ "length": 100,
+ "count": 3,
+ "rc": 0,
+ "errors": [
+  "Error in recvmsg: Protocol not supported"
+ ],
+ "ok": false,
+ "output": "Error in recvmsg: Protocol not supported\n"
+}</msg>
+<msg time="2026-10-14T11:42:36.791463" level="INFO">${r} = {'src': 'h1', 'dst': 'h4', 'ipv6': False, 'length': 100, 'count': 3, 'rc': 0, 'errors': ['Error in recvmsg: Protocol not supported'], 'ok': False, 'output': 'Error in recvmsg: Protocol not supported\n...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h4</arg>
+<arg>count=3</arg>
+<status status="PASS" start="2026-10-14T11:42:36.615560" elapsed="0.175925"/>
+</kw>
+<kw name="Should Not Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=h4 answered Homa with the module unloaded</arg>
+<doc>Fails if the given condition is true.</doc>
+<status status="PASS" start="2026-10-14T11:42:36.791610" elapsed="0.000298"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:37.000772" level="INFO">h4$ python3 -c "import socket; socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146).close()"
+</msg>
+<arg>h4</arg>
+<arg>python3 -c "import socket; socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 146).close()"</arg>
+<status status="PASS" start="2026-10-14T11:42:36.791974" elapsed="0.208900"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:37.168987" level="INFO">h4$ lsmod | grep -q '^homa '
+</msg>
+<arg>h4</arg>
+<arg>lsmod | grep -q '^homa '</arg>
+<status status="PASS" start="2026-10-14T11:42:37.001033" elapsed="0.168060"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:37.341128" level="INFO">h4$ sudo sysctl -q -p /etc/sysctl.d/90-homa.conf
+</msg>
+<arg>h4</arg>
+<arg>sudo sysctl -q -p /etc/sysctl.d/90-homa.conf</arg>
+<status status="PASS" start="2026-10-14T11:42:37.169263" elapsed="0.171989"/>
+</kw>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:37.552062" level="INFO">h4$ sudo systemctl start homa-prio homa-echo homa-echo6 cp-homa cp-tcp cp-homa-probe cp-tcp-probe
+</msg>
+<arg>h4</arg>
+<arg>sudo systemctl start ${SERVICES}[0] ${SERVICES}[1] ${SERVICES}[2] ${SERVICES}[3] ${SERVICES}[4] ${SERVICES}[5] ${SERVICES}[6]</arg>
+<status status="PASS" start="2026-10-14T11:42:37.341401" elapsed="0.210758"/>
+</kw>
+<kw name="Sleep" owner="BuiltIn">
+<msg time="2026-10-14T11:42:39.552777" level="INFO">Slept 2 seconds.</msg>
+<arg>2s</arg>
+<doc>Pauses execution for the given time.</doc>
+<status status="PASS" start="2026-10-14T11:42:37.552350" elapsed="2.000563"/>
+</kw>
+<kw name="Host Services Should Be Active" owner="common">
+<for flavor="IN">
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:39.730325" level="INFO">h4$ systemctl is-active homa-prio
+active
+</msg>
+<msg time="2026-10-14T11:42:39.730478" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:39.553682" elapsed="0.176820"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:39.730678" elapsed="0.000414"/>
+</kw>
+<var name="${s}">homa-prio</var>
+<status status="PASS" start="2026-10-14T11:42:39.553571" elapsed="0.177557"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:39.904513" level="INFO">h4$ systemctl is-active homa-echo
+active
+</msg>
+<msg time="2026-10-14T11:42:39.904657" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:39.731297" elapsed="0.173380"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:39.904843" elapsed="0.000354"/>
+</kw>
+<var name="${s}">homa-echo</var>
+<status status="PASS" start="2026-10-14T11:42:39.731236" elapsed="0.174024"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:40.072959" level="INFO">h4$ systemctl is-active homa-echo6
+active
+</msg>
+<msg time="2026-10-14T11:42:40.073106" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:39.905409" elapsed="0.167718"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:40.073297" elapsed="0.000339"/>
+</kw>
+<var name="${s}">homa-echo6</var>
+<status status="PASS" start="2026-10-14T11:42:39.905348" elapsed="0.168317"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:40.249355" level="INFO">h4$ systemctl is-active cp-homa
+active
+</msg>
+<msg time="2026-10-14T11:42:40.249503" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:40.073803" elapsed="0.175721"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:40.249669" elapsed="0.000335"/>
+</kw>
+<var name="${s}">cp-homa</var>
+<status status="PASS" start="2026-10-14T11:42:40.073747" elapsed="0.176286"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:40.425524" level="INFO">h4$ systemctl is-active cp-tcp
+active
+</msg>
+<msg time="2026-10-14T11:42:40.425666" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:40.250163" elapsed="0.175523"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:40.425834" elapsed="0.000334"/>
+</kw>
+<var name="${s}">cp-tcp</var>
+<status status="PASS" start="2026-10-14T11:42:40.250109" elapsed="0.176114"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:40.598132" level="INFO">h4$ systemctl is-active cp-homa-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:40.598286" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:40.426367" elapsed="0.171939"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:40.598450" elapsed="0.000328"/>
+</kw>
+<var name="${s}">cp-homa-probe</var>
+<status status="PASS" start="2026-10-14T11:42:40.426308" elapsed="0.172499"/>
+</iter>
+<iter>
+<kw name="Run On" owner="HomaLab">
+<msg time="2026-10-14T11:42:40.762591" level="INFO">h4$ systemctl is-active cp-tcp-probe
+active
+</msg>
+<msg time="2026-10-14T11:42:40.762739" level="INFO">${st} = active</msg>
+<var>${st}</var>
+<arg>${host}</arg>
+<arg>systemctl is-active ${s}</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:40.598938" elapsed="0.163821"/>
+</kw>
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${st}</arg>
+<arg>active</arg>
+<arg>msg=${host}: ${s} is ${st}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:40.762915" elapsed="0.000360"/>
+</kw>
+<var name="${s}">cp-tcp-probe</var>
+<status status="PASS" start="2026-10-14T11:42:40.598884" elapsed="0.164421"/>
+</iter>
+<var>${s}</var>
+<value>@{SERVICES}</value>
+<status status="PASS" start="2026-10-14T11:42:39.553441" elapsed="1.209891"/>
+</for>
+<arg>h4</arg>
+<status status="PASS" start="2026-10-14T11:42:39.553157" elapsed="1.210227"/>
+</kw>
+<kw name="Homa Rtt" owner="HomaLab">
+<msg time="2026-10-14T11:42:40.961627" level="INFO">{
+ "src": "h1",
+ "dst": "h4",
+ "ipv6": false,
+ "length": 100,
+ "count": 20,
+ "rc": 0,
+ "errors": [],
+ "min": 116.64,
+ "p10": 120.81,
+ "p20": 123.81,
+ "p30": 125.27,
+ "p40": 127.72,
+ "p50": 129.14,
+ "p60": 132.19,
+ "p70": 136.78,
+ "p80": 139.17,
+ "p90": 156.25,
+ "max": 157.48,
+ "avg": 131.54,
+ "ok": true
+}</msg>
+<msg time="2026-10-14T11:42:40.961797" level="INFO">${r} = {'src': 'h1', 'dst': 'h4', 'ipv6': False, 'length': 100, 'count': 20, 'rc': 0, 'errors': [], 'min': 116.64, 'p10': 120.81, 'p20': 123.81, 'p30': 125.27, 'p40': 127.72, 'p50': 129.14, 'p60': 132.19, 'p...</msg>
+<var>${r}</var>
+<arg>h1</arg>
+<arg>h4</arg>
+<arg>count=20</arg>
+<status status="PASS" start="2026-10-14T11:42:40.763449" elapsed="0.198372"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[ok]</arg>
+<arg>msg=${r}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:40.961977" elapsed="0.000355"/>
+</kw>
+<kw name="Run On" owner="HomaLab" type="TEARDOWN">
+<msg time="2026-10-14T11:42:41.161691" level="INFO">h4$ sudo modprobe homa; sudo sysctl -q -p /etc/sysctl.d/90-homa.conf; sudo systemctl start homa-prio homa-echo homa-echo6 cp-homa cp-tcp cp-homa-probe cp-tcp-probe
+</msg>
+<arg>h4</arg>
+<arg>sudo modprobe homa; sudo sysctl -q -p /etc/sysctl.d/90-homa.conf; sudo systemctl start ${SERVICES}[0] ${SERVICES}[1] ${SERVICES}[2] ${SERVICES}[3] ${SERVICES}[4] ${SERVICES}[5] ${SERVICES}[6]</arg>
+<arg>expect_rc=any</arg>
+<status status="PASS" start="2026-10-14T11:42:40.962459" elapsed="0.199329"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:35.974483" elapsed="5.187358"/>
+</test>
+<doc>Homa works end to end: jumbo frames through sw1, a Homa round trip between every pair of hosts over IPv4
+and IPv6 (contents validated by the echo servers), message sizes from 8 bytes (the echo protocol's own
+header: the second word is the reply length) to Homa's 1 MB maximum, and the module's lifecycle (it
+refuses to unload while sockets are open, unloads, and the kernel loads it again on the first
+IPPROTO 146 socket).</doc>
+<status status="PASS" start="2026-10-14T11:42:14.190296" elapsed="26.971804"/>
+</suite>
+<suite id="s1-s3" name="03 Wire" source="/home/dcantor/homa-lab/tests/suites/03_wire.robot">
+<kw name="Run Keywords" owner="BuiltIn" type="SETUP">
+<kw name="Lab Setup" owner="common">
+<kw name="Homa Hosts" owner="HomaLab">
+<msg time="2026-10-14T11:42:41.164845" level="INFO">${hosts} = ['h1', 'h2', 'h3', 'h4']</msg>
+<var>${hosts}</var>
+<status status="PASS" start="2026-10-14T11:42:41.164761" elapsed="0.000106"/>
+</kw>
+<kw name="Set Global Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:42:41.165149" level="INFO">@{HOSTS} = [ h1 | h2 | h3 | h4 ]</msg>
+<arg>@{HOSTS}</arg>
+<arg>@{hosts}</arg>
+<doc>Makes the variable available globally in all tests and suites.</doc>
+<status status="PASS" start="2026-10-14T11:42:41.164940" elapsed="0.000238"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:41.164653" elapsed="0.000573"/>
+</kw>
+<kw name="Capture">
+<kw name="Capture Homa" owner="HomaLab">
+<msg time="2026-10-14T11:42:59.407796" level="INFO">{
+ "packets": 148056,
+ "types": {
+  "DATA": 104430,
+  "START_MSG": 1203,
+  "GRANT": 40405,
+  "NEED_ACK": 668,
+  "ACK": 666,
+  "RESEND": 393,
+  "BUSY": 182,
+  "RPC_UNKNOWN": 109
+ },
+ "priorities": {
+  "short_data": [
+   7
+  ],
+  "long_first_packet": [
+   0,
+   1,
+   7
+  ],
+  "long_scheduled_data": [
+   0,
+   1,
+   7
+  ],
+  "grants_carry": [
+   0,
+   1
+  ],
+  "control": [
+   7
+  ]
+ },
+ "data_packets": 104430,
+ "retransmitted": 1099
+}</msg>
+<msg time="2026-10-14T11:42:59.407893" level="INFO">148056 Homa packets on sw1 eth1 (to and from h1): DATA 104430, GRANT 40405, START_MSG 1203, NEED_ACK 668, ACK 666, RESEND 393, BUSY 182, RPC_UNKNOWN 109
+  priorities on the wire: {'short_data': [7], 'long_first_packet': [0, 1, 7], 'long_scheduled_data': [0, 1, 7], 'grants_carry': [0, 1], 'control': [7]}</msg>
+<msg time="2026-10-14T11:42:59.408010" level="INFO">${c} = {'packets': 148056, 'types': {'DATA': 104430, 'START_MSG': 1203, 'GRANT': 40405, 'NEED_ACK': 668, 'ACK': 666, 'RESEND': 393, 'BUSY': 182, 'RPC_UNKNOWN': 109}, 'priorities': {'short_data': [7], 'long_f...</msg>
+<var>${c}</var>
+<arg>seconds=4</arg>
+<status status="PASS" start="2026-10-14T11:42:41.165403" elapsed="18.242629"/>
+</kw>
+<kw name="Set Suite Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:42:59.408514" level="INFO">${CAP} = {'packets': 148056, 'types': {'DATA': 104430, 'START_MSG': 1203, 'GRANT': 40405, 'NEED_ACK': 668, 'ACK': 666, 'RESEND': 393, 'BUSY': 182, 'RPC_UNKNOWN': 109}, 'priorities': {'short_data': [7], 'long_f...</msg>
+<arg>${CAP}</arg>
+<arg>${c}</arg>
+<doc>Makes the variable available everywhere within the scope of the current suite.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.408197" elapsed="0.000351"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:41.165308" elapsed="18.243287"/>
+</kw>
+<arg>Lab Setup</arg>
+<arg>AND</arg>
+<arg>Capture</arg>
+<doc>Executes all the given keywords in a sequence.</doc>
+<status status="PASS" start="2026-10-14T11:42:41.164319" elapsed="18.244310"/>
+</kw>
+<test id="s1-s3-t1" name="The capture decodes as Homa with the lab dissector" line="18">
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${CAP}[packets] &gt; 1000</arg>
+<arg>msg=only ${CAP}[packets] Homa packets captured</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.408917" elapsed="0.000271"/>
+</kw>
+<kw name="Dictionary Should Contain Key" owner="Collections">
+<arg>${CAP}[types]</arg>
+<arg>DATA</arg>
+<doc>Fails if `key` is not found from `dictionary`.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.409273" elapsed="0.000125"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:59.408678" elapsed="0.000787"/>
+</test>
+<test id="s1-s3-t2" name="Receiver-driven transfers: GRANTs and START_MSG appear, and the RPCs are acknowledged" line="22">
+<for flavor="IN">
+<iter>
+<kw name="Dictionary Should Contain Key" owner="Collections">
+<arg>${CAP}[types]</arg>
+<arg>${t}</arg>
+<arg>msg=no ${t} packets: ${CAP}[types]</arg>
+<doc>Fails if `key` is not found from `dictionary`.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.409863" elapsed="0.000145"/>
+</kw>
+<var name="${t}">GRANT</var>
+<status status="PASS" start="2026-10-14T11:42:59.409810" elapsed="0.000224"/>
+</iter>
+<iter>
+<kw name="Dictionary Should Contain Key" owner="Collections">
+<arg>${CAP}[types]</arg>
+<arg>${t}</arg>
+<arg>msg=no ${t} packets: ${CAP}[types]</arg>
+<doc>Fails if `key` is not found from `dictionary`.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.410134" elapsed="0.000143"/>
+</kw>
+<var name="${t}">START_MSG</var>
+<status status="PASS" start="2026-10-14T11:42:59.410087" elapsed="0.000215"/>
+</iter>
+<var>${t}</var>
+<value>GRANT</value>
+<value>START_MSG</value>
+<status status="PASS" start="2026-10-14T11:42:59.409730" elapsed="0.000591"/>
+</for>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-14T11:42:59.410707" level="INFO">${acks} = 1334</msg>
+<var>${acks}</var>
+<arg>${CAP}[types].get('ACK', 0) + ${CAP}[types].get('NEED_ACK', 0)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.410425" elapsed="0.000300"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${acks} &gt; 0</arg>
+<arg>msg=no ACK / NEED_ACK packets: ${CAP}[types]</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.410799" elapsed="0.000219"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:59.409568" elapsed="0.001511"/>
+</test>
+<test id="s1-s3-t3" name="Short messages travel at the highest priority" line="29">
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${CAP}[priorities][short_data]</arg>
+<arg>${{[7]}}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.411377" elapsed="0.000257"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:59.411176" elapsed="0.000519"/>
+</test>
+<test id="s1-s3-t4" name="Scheduled data uses the priorities the grants assign, below the top one" line="32">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:42:59.412147" level="INFO">${sched} = [0, 1, 7]</msg>
+<var>${sched}</var>
+<arg>${CAP}[priorities][long_scheduled_data]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.411970" elapsed="0.000194"/>
+</kw>
+<kw name="Should Not Be Empty" owner="BuiltIn">
+<msg time="2026-10-14T11:42:59.412414" level="INFO">Length is 3.</msg>
+<arg>${sched}</arg>
+<doc>Verifies that the given item is not empty.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.412246" elapsed="0.000198"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>min(${sched}) &lt; 7</arg>
+<arg>msg=scheduled data only at priority 7: ${sched}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.412536" elapsed="0.000231"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:42:59.413002" level="INFO">${g} = [0, 1]</msg>
+<var>${g}</var>
+<arg>${CAP}[priorities][grants_carry]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.412836" elapsed="0.000183"/>
+</kw>
+<kw name="Should Not Be Empty" owner="BuiltIn">
+<msg time="2026-10-14T11:42:59.413228" level="INFO">Length is 2.</msg>
+<arg>${g}</arg>
+<doc>Verifies that the given item is not empty.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.413077" elapsed="0.000180"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>max(${g}) &lt;= 6</arg>
+<arg>msg=grants assign priorities above max_sched_prio: ${g}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.413323" elapsed="0.000248"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:59.411790" elapsed="0.001847"/>
+</test>
+<test id="s1-s3-t5" name="Control packets travel at the highest priority" line="40">
+<kw name="Should Be Equal" owner="BuiltIn">
+<arg>${CAP}[priorities][control]</arg>
+<arg>${{[7]}}</arg>
+<doc>Fails if the given objects are unequal.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.413915" elapsed="0.000211"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:59.413730" elapsed="0.000476"/>
+</test>
+<test id="s1-s3-t6" name="sw1 sorted the traffic into more than one priority queue" line="43">
+<kw name="Switch Qos Stats" owner="HomaLab">
+<msg time="2026-10-14T11:42:59.655620" level="INFO">${s} = {'eth1': {'mode': 'prio', 'prio': {'7': {'packets': 25893, 'bytes': 14723184, 'drops': 0, 'backlog': 0, 'qlen': 0}, '5': {'packets': 0, 'bytes': 0, 'drops': 0, 'backlog': 0, 'qlen': 0}, '3': {'packets...</msg>
+<var>${s}</var>
+<status status="PASS" start="2026-10-14T11:42:59.414459" elapsed="0.241207"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-14T11:42:59.656358" level="INFO">${used} = ['7', '1', '6', '0']</msg>
+<var>${used}</var>
+<arg>[k for k, v in ${s}[eth1][prio].items() if v['packets'] &gt; 0]</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.655811" elapsed="0.000579"/>
+</kw>
+<kw name="Get Length" owner="BuiltIn">
+<msg time="2026-10-14T11:42:59.656769" level="INFO">Length is 4.</msg>
+<msg time="2026-10-14T11:42:59.656828" level="INFO">${n} = 4</msg>
+<var>${n}</var>
+<arg>${used}</arg>
+<doc>Returns and logs the length of the given item as an integer.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.656475" elapsed="0.000371"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${n} &gt;= 3</arg>
+<arg>msg=sw1 eth1 used queues ${used}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.656926" elapsed="0.000285"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:59.414299" elapsed="0.243006"/>
+</test>
+<doc>What Homa puts on the wire, captured at h1 while it serves short messages and 500 KB messages at once and
+decoded with the lab's dissector (image/homa.lua): the protocol's packet types, and the priorities in the
+IP header that sw1 queues by — short messages and control packets at the top priority, scheduled data at
+the priorities the receiver's grants assign (below the top).</doc>
+<status status="PASS" start="2026-10-14T11:42:41.162620" elapsed="18.494906"/>
+</suite>
+<suite id="s1-s4" name="04 Compare" source="/home/dcantor/homa-lab/tests/suites/04_compare.robot">
+<kw name="Lab Setup" owner="common" type="SETUP">
+<kw name="Homa Hosts" owner="HomaLab">
+<msg time="2026-10-14T11:42:59.659869" level="INFO">${hosts} = ['h1', 'h2', 'h3', 'h4']</msg>
+<var>${hosts}</var>
+<status status="PASS" start="2026-10-14T11:42:59.659778" elapsed="0.000111"/>
+</kw>
+<kw name="Set Global Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:42:59.660199" level="INFO">@{HOSTS} = [ h1 | h2 | h3 | h4 ]</msg>
+<arg>@{HOSTS}</arg>
+<arg>@{hosts}</arg>
+<doc>Makes the variable available globally in all tests and suites.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.659967" elapsed="0.000266"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:42:59.659650" elapsed="0.000625"/>
+</kw>
+<test id="s1-s4-t1" name="Both protocols carry the same workload, and the results are recorded" line="10">
+<kw name="Compare Homa And Tcp" owner="HomaLab">
+<msg time="2026-10-14T11:43:29.265126" level="INFO" html="true">&lt;b&gt;Homa vs TCP, same workload&lt;/b&gt;&lt;table border=1 cellpadding=3&gt;&lt;tr&gt;&lt;th&gt;&lt;/th&gt;&lt;th&gt;messages&lt;/th&gt;&lt;th&gt;n&lt;/th&gt;&lt;th&gt;p50 µs&lt;/th&gt;&lt;th&gt;p99 µs&lt;/th&gt;&lt;th&gt;p99.9 µs&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;homa&lt;/td&gt;&lt;td&gt;short (&lt;=1 KB)&lt;/td&gt;&lt;td&gt;150755&lt;/td&gt;&lt;td&gt;296.1&lt;/td&gt;&lt;td&gt;2160.1&lt;/td&gt;&lt;td&gt;6500.7&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;homa&lt;/td&gt;&lt;td&gt;medium (1-100 KB)&lt;/td&gt;&lt;td&gt;23900&lt;/td&gt;&lt;td&gt;324.3&lt;/td&gt;&lt;td&gt;2378.8&lt;/td&gt;&lt;td&gt;6407.3&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;homa&lt;/td&gt;&lt;td&gt;long (&gt;100 KB)&lt;/td&gt;&lt;td&gt;846&lt;/td&gt;&lt;td&gt;3109.4&lt;/td&gt;&lt;td&gt;21308.7&lt;/td&gt;&lt;td&gt;26161.7&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;homa&lt;/td&gt;&lt;td&gt;all&lt;/td&gt;&lt;td&gt;175501&lt;/td&gt;&lt;td&gt;300.6&lt;/td&gt;&lt;td&gt;2416.6&lt;/td&gt;&lt;td&gt;9035.4&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;tcp&lt;/td&gt;&lt;td&gt;short (&lt;=1 KB)&lt;/td&gt;&lt;td&gt;149553&lt;/td&gt;&lt;td&gt;326.4&lt;/td&gt;&lt;td&gt;4341.2&lt;/td&gt;&lt;td&gt;12677.3&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;tcp&lt;/td&gt;&lt;td&gt;medium (1-100 KB)&lt;/td&gt;&lt;td&gt;24020&lt;/td&gt;&lt;td&gt;354.1&lt;/td&gt;&lt;td&gt;4596.9&lt;/td&gt;&lt;td&gt;12747.2&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;tcp&lt;/td&gt;&lt;td&gt;long (&gt;100 KB)&lt;/td&gt;&lt;td&gt;818&lt;/td&gt;&lt;td&gt;2351.3&lt;/td&gt;&lt;td&gt;16057.9&lt;/td&gt;&lt;td&gt;22627.2&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;tcp&lt;/td&gt;&lt;td&gt;all&lt;/td&gt;&lt;td&gt;174391&lt;/td&gt;&lt;td&gt;330.8&lt;/td&gt;&lt;td&gt;4691.2&lt;/td&gt;&lt;td&gt;14119.0&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</msg>
+<msg time="2026-10-14T11:43:29.265259" level="INFO">homa: 175501 RPCs  short p50 296.1 p99 2160.1  medium p50 324.3 p99 2378.8  long p50 3109.4 p99 21308.7
+  tcp : 174391 RPCs  short p50 326.4 p99 4341.2  medium p50 354.1 p99 4596.9  long p50 2351.3 p99 16057.9</msg>
+<msg time="2026-10-14T11:43:29.265408" level="INFO">${r} = {'workload': 'w3', 'gbps': 0.3, 'seconds': 12, 'client': 'h1', 'servers': ['h2', 'h3', 'h4'], 'homa': {'rpcs': 175501, 'rtt_us': {'short (&lt;=1 KB)': {'n': 150755, 'p50': 296.1, 'p99': 2160.1, 'p99.9': ...</msg>
+<var>${r}</var>
+<arg>workload=w3</arg>
+<arg>gbps=0.3</arg>
+<arg>seconds=12</arg>
+<status status="PASS" start="2026-10-14T11:42:59.660503" elapsed="29.604927"/>
+</kw>
+<kw name="Set Suite Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:43:29.266040" level="INFO">${CMP} = {'workload': 'w3', 'gbps': 0.3, 'seconds': 12, 'client': 'h1', 'servers': ['h2', 'h3', 'h4'], 'homa': {'rpcs': 175501, 'rtt_us': {'short (&lt;=1 KB)': {'n': 150755, 'p50': 296.1, 'p99': 2160.1, 'p99.9': ...</msg>
+<arg>${CMP}</arg>
+<arg>${r}</arg>
+<doc>Makes the variable available everywhere within the scope of the current suite.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.265593" elapsed="0.000483"/>
+</kw>
+<for flavor="IN">
+<iter>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[${p}][rpcs] &gt; 10000</arg>
+<arg>msg=${p}: only ${r}[${p}][rpcs] RPCs completed</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.266293" elapsed="0.000282"/>
+</kw>
+<var name="${p}">homa</var>
+<status status="PASS" start="2026-10-14T11:43:29.266226" elapsed="0.000376"/>
+</iter>
+<iter>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[${p}][rpcs] &gt; 10000</arg>
+<arg>msg=${p}: only ${r}[${p}][rpcs] RPCs completed</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.266721" elapsed="0.000240"/>
+</kw>
+<var name="${p}">tcp</var>
+<status status="PASS" start="2026-10-14T11:43:29.266659" elapsed="0.000329"/>
+</iter>
+<var>${p}</var>
+<value>homa</value>
+<value>tcp</value>
+<status status="PASS" start="2026-10-14T11:43:29.266121" elapsed="0.000887"/>
+</for>
+<status status="PASS" start="2026-10-14T11:42:59.660311" elapsed="29.606766"/>
+</test>
+<test id="s1-s4-t2" name="Homa's short-message tail latency is not worse than TCP's" line="17">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:43:29.267606" level="INFO">${h} = 2160.1</msg>
+<var>${h}</var>
+<arg>${CMP}[homa][rtt_us][short (&lt;=1 KB)][p99]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.267410" elapsed="0.000216"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:43:29.267874" level="INFO">${t} = 4341.2</msg>
+<var>${t}</var>
+<arg>${CMP}[tcp][rtt_us][short (&lt;=1 KB)][p99]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.267691" elapsed="0.000201"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2026-10-14T11:43:29.268130" level="INFO">short messages p99: Homa 2160.1 us, TCP 4341.2 us</msg>
+<arg>short messages p99: Homa ${h} us, TCP ${t} us</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.267981" elapsed="0.000293"/>
+</kw>
+<if>
+<branch type="IF" condition="${h} &gt; ${t}">
+<kw name="Log" owner="BuiltIn">
+<arg>Homa's short-message p99 (${h} us) is above TCP's (${t} us) in this run</arg>
+<arg>WARN</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2026-10-14T11:43:29.268478" elapsed="0.000014"/>
+</kw>
+<status status="NOT RUN" start="2026-10-14T11:43:29.268335" elapsed="0.000180"/>
+</branch>
+<status status="PASS" start="2026-10-14T11:43:29.268316" elapsed="0.000215"/>
+</if>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${h} &lt;= ${t} * 1.5</arg>
+<arg>msg=Homa short p99 ${h} us vs TCP ${t} us</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.268593" elapsed="0.000247"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:43:29.267201" elapsed="0.001703"/>
+</test>
+<doc>Homa against TCP on the same hosts and network, the same workload (HomaModule's W3 message-size
+distribution, 0.3 Gbit/s offered by h1 to h2-h4, 12 s each), measured by HomaModule's cp_node.
+Recorded, not judged on absolute numbers: these are VMs on one host, TCP has segmentation offload on the
+virtio NICs and Homa does not. The tail for short messages is where Homa should be ahead.</doc>
+<status status="PASS" start="2026-10-14T11:42:59.657992" elapsed="29.611061"/>
+</suite>
+<suite id="s1-s5" name="05 Incast" source="/home/dcantor/homa-lab/tests/suites/05_incast.robot">
+<kw name="Run Keywords" owner="BuiltIn" type="SETUP">
+<kw name="Lab Setup" owner="common">
+<kw name="Homa Hosts" owner="HomaLab">
+<msg time="2026-10-14T11:43:29.271520" level="INFO">${hosts} = ['h1', 'h2', 'h3', 'h4']</msg>
+<var>${hosts}</var>
+<status status="PASS" start="2026-10-14T11:43:29.271443" elapsed="0.000096"/>
+</kw>
+<kw name="Set Global Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:43:29.271807" level="INFO">@{HOSTS} = [ h1 | h2 | h3 | h4 ]</msg>
+<arg>@{HOSTS}</arg>
+<arg>@{hosts}</arg>
+<doc>Makes the variable available globally in all tests and suites.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.271607" elapsed="0.000230"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:43:29.271342" elapsed="0.000534"/>
+</kw>
+<kw name="Incast">
+<kw name="Run Incast" owner="HomaLab">
+<msg time="2026-10-14T11:44:48.674731" level="INFO">{
+ "target": "h1",
+ "bulk_senders": [
+  "h2",
+  "h3"
+ ],
+ "prober": "h4",
+ "bulk_size": 500000,
+ "probe_size": 100,
+ "rate_mbit": 1000,
+ "seconds": 10,
+ "runs": [
+  {
+   "mode": "prio",
+   "protocol": "homa",
+   "probe_idle": {
+    "n": 18140,
+    "p50": 142.3,
+    "p99": 513.5,
+    "p99.9": 1643.9,
+    "mean": 165.9
+   },
+   "probe_loaded": {
+    "n": 24697,
+    "p50": 327.4,
+    "p99": 1521.1,
+    "p99.9": 6001.4,
+    "mean": 405.8
+   },
+   "bulk_mbit": 965.7,
+   "sw_drops": 8144,
+   "sw_band_packets": {
+    "7": 52099,
+    "6": 168281,
+    "5": 1681,
+    "4": 277,
+    "3": 211,
+    "2": 31,
+    "0": 422
+   }
+  },
+  {
+   "mode": "prio",
+   "protocol": "tcp",
+   "probe_idle": {
+    "n": 20407,
+    "p50": 142.3,
+    "p99": 217.5,
+    "p99.9": 658.6,
+    "mean": 147.4
+   },
+   "probe_loaded": {
+    "n": 778,
+    "p50": 12983.5,
+    "p99": 18779.7,
+    "p99.9": 24205.6,
+    "mean": 12914.9
+   },
+   "bulk_mbit": 989.7,
+   "sw_drops": 56,
+   "sw_band_packets": {
+    "0": 180962
+   }
+  },
+  {
+   "mode": "fifo",
+   "protocol": "homa",
+   "probe_idle": {
+    "n": 18833,
+    "p50": 140.6,
+    "p99": 445.1,
+    "p99.9": 1181.2,
+    "mean": 159.8
+   },
+   "probe_loaded": {
+    "n": 3309,
+    "p50": 2962.0,
+    "p99": 5488.4,
+    "p99.9": 15776.3,
+    "mean": 3043.3
+   },
+   "bulk_mbit": 987.7,
+   "sw_drops": 0,
+   "sw_band_packets": {}
+  },
+  {
+   "mode": "fifo",
+   "protocol": "tcp",
+   "probe_idle": {
+    "n": 19685,
+    "p50": 144.5,
+    "p99": 294.7,
+    "p99.9": 616.8,
+    "mean": 152.6
+   },
+   "probe_loaded": {
+    "n": 322,
+    "p50": 30451.5,
+    "p99": 66512.7,
+    "p99.9": 81553.9,
+    "mean": 31215.8
+   },
+   "bulk_mbit": 949.3,
+   "sw_drops": 0,
+   "sw_band_packets": {}
+  }
+ ]
+}</msg>
+<msg time="2026-10-14T11:44:48.674851" level="INFO" html="true">&lt;b&gt;Incast at h1: bulk from h2, h3, probes from h4&lt;/b&gt;&lt;table border=1 cellpadding=3&gt;&lt;tr&gt;&lt;th&gt;&lt;/th&gt;&lt;th&gt;messages&lt;/th&gt;&lt;th&gt;n&lt;/th&gt;&lt;th&gt;p50 µs&lt;/th&gt;&lt;th&gt;p99 µs&lt;/th&gt;&lt;th&gt;p99.9 µs&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;sw1 prio / homa&lt;/td&gt;&lt;td&gt;probe idle&lt;/td&gt;&lt;td&gt;18140&lt;/td&gt;&lt;td&gt;142.3&lt;/td&gt;&lt;td&gt;513.5&lt;/td&gt;&lt;td&gt;1643.9&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;sw1 prio / homa&lt;/td&gt;&lt;td&gt;probe under incast (bulk 965.7 Mbit/s, sw1 drops 8144)&lt;/td&gt;&lt;td&gt;24697&lt;/td&gt;&lt;td&gt;327.4&lt;/td&gt;&lt;td&gt;1521.1&lt;/td&gt;&lt;td&gt;6001.4&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;sw1 prio / tcp&lt;/td&gt;&lt;td&gt;probe idle&lt;/td&gt;&lt;td&gt;20407&lt;/td&gt;&lt;td&gt;142.3&lt;/td&gt;&lt;td&gt;217.5&lt;/td&gt;&lt;td&gt;658.6&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;sw1 prio / tcp&lt;/td&gt;&lt;td&gt;probe under incast (bulk 989.7 Mbit/s, sw1 drops 56)&lt;/td&gt;&lt;td&gt;778&lt;/td&gt;&lt;td&gt;12983.5&lt;/td&gt;&lt;td&gt;18779.7&lt;/td&gt;&lt;td&gt;24205.6&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;sw1 fifo / homa&lt;/td&gt;&lt;td&gt;probe idle&lt;/td&gt;&lt;td&gt;18833&lt;/td&gt;&lt;td&gt;140.6&lt;/td&gt;&lt;td&gt;445.1&lt;/td&gt;&lt;td&gt;1181.2&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;sw1 fifo / homa&lt;/td&gt;&lt;td&gt;probe under incast (bulk 987.7 Mbit/s, sw1 drops 0)&lt;/td&gt;&lt;td&gt;3309&lt;/td&gt;&lt;td&gt;2962.0&lt;/td&gt;&lt;td&gt;5488.4&lt;/td&gt;&lt;td&gt;15776.3&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;sw1 fifo / tcp&lt;/td&gt;&lt;td&gt;probe idle&lt;/td&gt;&lt;td&gt;19685&lt;/td&gt;&lt;td&gt;144.5&lt;/td&gt;&lt;td&gt;294.7&lt;/td&gt;&lt;td&gt;616.8&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;sw1 fifo / tcp&lt;/td&gt;&lt;td&gt;probe under incast (bulk 949.3 Mbit/s, sw1 drops 0)&lt;/td&gt;&lt;td&gt;322&lt;/td&gt;&lt;td&gt;30451.5&lt;/td&gt;&lt;td&gt;66512.7&lt;/td&gt;&lt;td&gt;81553.9&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</msg>
+<msg time="2026-10-14T11:44:48.674921" level="INFO">sw1 prio homa: probe RTT idle p50 142.3 us | under incast p50 327.4 p99 1521.1 us (n=24697); bulk 965.7 Mbit/s into a 1000 Mbit/s port; sw1 drops 8144; packets by priority {'7': 52099, '6': 168281, '5': 1681, '4': 277, '3': 211, '2': 31, '0': 422}
+  sw1 prio tcp : probe RTT idle p50 142.3 us | under incast p50 12983.5 p99 18779.7 us (n=778); bulk 989.7 Mbit/s into a 1000 Mbit/s port; sw1 drops 56; packets by priority {'0': 180962}
+  sw1 fifo homa: probe RTT idle p50 140.6 us | under incast p50 2962.0 p99 5488.4 us (n=3309); bulk 987.7 Mbit/s into a 1000 Mbit/s port; sw1 drops 0; packets by priority {}
+  sw1 fifo tcp : probe RTT idle p50 144.5 us | under incast p50 30451.5 p99 66512.7 us (n=322); bulk 949.3 Mbit/s into a 1000 Mbit/s port; sw1 drops 0; packets by priority {}</msg>
+<msg time="2026-10-14T11:44:48.675083" level="INFO">${r} = {'prio_homa': {'mode': 'prio', 'protocol': 'homa', 'probe_idle': {'n': 18140, 'p50': 142.3, 'p99': 513.5, 'p99.9': 1643.9, 'mean': 165.9}, 'probe_loaded': {'n': 24697, 'p50': 327.4, 'p99': 1521.1, 'p9...</msg>
+<var>${r}</var>
+<arg>modes=prio,fifo</arg>
+<arg>protocols=homa,tcp</arg>
+<arg>seconds=10</arg>
+<arg>rate_mbit=1000</arg>
+<status status="PASS" start="2026-10-14T11:43:29.272041" elapsed="79.403065"/>
+</kw>
+<kw name="Set Suite Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.675631" level="INFO">${R} = {'prio_homa': {'mode': 'prio', 'protocol': 'homa', 'probe_idle': {'n': 18140, 'p50': 142.3, 'p99': 513.5, 'p99.9': 1643.9, 'mean': 165.9}, 'probe_loaded': {'n': 24697, 'p50': 327.4, 'p99': 1521.1, 'p9...</msg>
+<arg>${R}</arg>
+<arg>${r}</arg>
+<doc>Makes the variable available everywhere within the scope of the current suite.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.675303" elapsed="0.000362"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:43:29.271955" elapsed="79.403759"/>
+</kw>
+<arg>Lab Setup</arg>
+<arg>AND</arg>
+<arg>Incast</arg>
+<doc>Executes all the given keywords in a sequence.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.271085" elapsed="79.404674"/>
+</kw>
+<test id="s1-s5-t1" name="The bulk senders saturate h1's port in every run" line="17">
+<for flavor="IN">
+<iter>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${R}[${k}][bulk_mbit] &gt; 600</arg>
+<arg>msg=${k}: bulk only ${R}[${k}][bulk_mbit] Mbit/s</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.676259" elapsed="0.000367"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${R}[${k}][probe_loaded][n] &gt; 50</arg>
+<arg>msg=${k}: too few probe samples</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.676727" elapsed="0.000242"/>
+</kw>
+<var name="${k}">prio_homa</var>
+<status status="PASS" start="2026-10-14T11:44:48.676137" elapsed="0.000860"/>
+</iter>
+<iter>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${R}[${k}][bulk_mbit] &gt; 600</arg>
+<arg>msg=${k}: bulk only ${R}[${k}][bulk_mbit] Mbit/s</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.677130" elapsed="0.000377"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${R}[${k}][probe_loaded][n] &gt; 50</arg>
+<arg>msg=${k}: too few probe samples</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.677600" elapsed="0.000242"/>
+</kw>
+<var name="${k}">fifo_homa</var>
+<status status="PASS" start="2026-10-14T11:44:48.677062" elapsed="0.000808"/>
+</iter>
+<iter>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${R}[${k}][bulk_mbit] &gt; 600</arg>
+<arg>msg=${k}: bulk only ${R}[${k}][bulk_mbit] Mbit/s</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.678003" elapsed="0.000258"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${R}[${k}][probe_loaded][n] &gt; 50</arg>
+<arg>msg=${k}: too few probe samples</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.678342" elapsed="0.000316"/>
+</kw>
+<var name="${k}">prio_tcp</var>
+<status status="PASS" start="2026-10-14T11:44:48.677937" elapsed="0.000749"/>
+</iter>
+<iter>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${R}[${k}][bulk_mbit] &gt; 600</arg>
+<arg>msg=${k}: bulk only ${R}[${k}][bulk_mbit] Mbit/s</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.678817" elapsed="0.000241"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${R}[${k}][probe_loaded][n] &gt; 50</arg>
+<arg>msg=${k}: too few probe samples</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.679136" elapsed="0.000290"/>
+</kw>
+<var name="${k}">fifo_tcp</var>
+<status status="PASS" start="2026-10-14T11:44:48.678751" elapsed="0.000716"/>
+</iter>
+<var>${k}</var>
+<value>prio_homa</value>
+<value>fifo_homa</value>
+<value>prio_tcp</value>
+<value>fifo_tcp</value>
+<status status="PASS" start="2026-10-14T11:44:48.676034" elapsed="0.003464"/>
+</for>
+<status status="PASS" start="2026-10-14T11:44:48.675819" elapsed="0.003795"/>
+</test>
+<test id="s1-s5-t2" name="With priority queues, Homa's short messages pass the queued bulk data" line="23">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.680240" level="INFO">${prio} = 1521.1</msg>
+<var>${prio}</var>
+<arg>${R}[prio_homa][probe_loaded][p99]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.680018" elapsed="0.000249"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.680572" level="INFO">${fifo} = 5488.4</msg>
+<var>${fifo}</var>
+<arg>${R}[fifo_homa][probe_loaded][p99]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.680357" elapsed="0.000248"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.680900" level="INFO">Homa probe p99 under incast: priority queues 1521.1 us, one FIFO 5488.4 us</msg>
+<arg>Homa probe p99 under incast: priority queues ${prio} us, one FIFO ${fifo} us</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.680723" elapsed="0.000212"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${prio} &lt; ${fifo}</arg>
+<arg>msg=priority queues did not help Homa: ${prio} us vs ${fifo} us</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.681010" elapsed="0.000270"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${R}[prio_homa][probe_loaded][p50] &lt; ${R}[fifo_homa][probe_loaded][p50] / 3</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.681376" elapsed="0.000238"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:44:48.679764" elapsed="0.001946"/>
+</test>
+<test id="s1-s5-t3" name="Under incast Homa's short messages beat TCP's: 10x at the median, 3x at p99" line="30">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.682266" level="INFO">${h50} = 327.4</msg>
+<var>${h50}</var>
+<arg>${R}[prio_homa][probe_loaded][p50]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.682051" elapsed="0.000245"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.682562" level="INFO">${t50} = 12983.5</msg>
+<var>${t50}</var>
+<arg>${R}[prio_tcp][probe_loaded][p50]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.682381" elapsed="0.000206"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.682899" level="INFO">${h99} = 1521.1</msg>
+<var>${h99}</var>
+<arg>${R}[prio_homa][probe_loaded][p99]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.682687" elapsed="0.000232"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.683161" level="INFO">${t99} = 18779.7</msg>
+<var>${t99}</var>
+<arg>${R}[prio_tcp][probe_loaded][p99]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.682990" elapsed="0.000190"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.683514" level="INFO">probe RTT under incast with priority queues: Homa p50 327.4 / p99 1521.1 us, TCP p50 12983.5 / p99 18779.7 us</msg>
+<arg>probe RTT under incast with priority queues: Homa p50 ${h50} / p99 ${h99} us, TCP p50 ${t50} / p99 ${t99} us</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.683327" elapsed="0.000222"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${h50} * 10 &lt; ${t50}</arg>
+<arg>msg=median: Homa ${h50} us vs TCP ${t50} us</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.683625" elapsed="0.000310"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${h99} * 3 &lt; ${t99}</arg>
+<arg>msg=p99: Homa ${h99} us vs TCP ${t99} us</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.684016" elapsed="0.000264"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:44:48.681833" elapsed="0.002537"/>
+</test>
+<test id="s1-s5-t4" name="Homa's packets used several of sw1's priority queues, TCP's only the lowest" line="40">
+<kw name="Get Dictionary Keys" owner="Collections">
+<msg time="2026-10-14T11:44:48.684885" level="INFO">${homa} = ['0', '2', '3', '4', '5', '6', '7']</msg>
+<var>${homa}</var>
+<arg>${R}[prio_homa][sw_band_packets]</arg>
+<doc>Returns keys of the given `dictionary` as a list.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.684735" elapsed="0.000171"/>
+</kw>
+<kw name="Get Length" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.685184" level="INFO">Length is 7.</msg>
+<msg time="2026-10-14T11:44:48.685281" level="INFO">${n} = 7</msg>
+<var>${n}</var>
+<arg>${homa}</arg>
+<doc>Returns and logs the length of the given item as an integer.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.684980" elapsed="0.000328"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${n} &gt;= 3</arg>
+<arg>msg=Homa used ${homa}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.685395" elapsed="0.000255"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.685983" level="INFO">${b} = {'0': 180962}</msg>
+<var>${b}</var>
+<arg>${R}[prio_tcp][sw_band_packets]</arg>
+<doc>Returns the given values which can then be assigned to a variable.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.685739" elapsed="0.000265"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.686345" level="INFO">${total} = 180962</msg>
+<var>${total}</var>
+<arg>sum(${b}.values())</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.686088" elapsed="0.000278"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2026-10-14T11:44:48.686653" level="INFO">${low} = 180962</msg>
+<var>${low}</var>
+<arg>${b}.get('0', 0)</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.686446" elapsed="0.000225"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${low} &gt;= ${total} * 0.99</arg>
+<arg>msg=TCP outside the lowest queue: ${b}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:48.686742" elapsed="0.000324"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:44:48.684489" elapsed="0.002648"/>
+</test>
+<kw name="Restore Switch Default" owner="HomaLab" type="TEARDOWN">
+<status status="PASS" start="2026-10-14T11:44:48.687412" elapsed="0.414080"/>
+</kw>
+<doc>Incast at h1: h2 and h3 stream 500 KB messages to h1 (twice what h1's 1 Gbit/s port at sw1 can take)
+while h4 sends 100 B probes to h1, one at a time, to separate server processes. Once with sw1's strict
+priority queues, once with one FIFO queue; Homa, then TCP. Homa's short messages go at the top
+priority, so with priority queues they pass the bulk data queued at the bottleneck — the effect Homa is
+designed around. TCP marks everything priority 0 and gets no such help.</doc>
+<status status="PASS" start="2026-10-14T11:43:29.269489" elapsed="79.832074"/>
+</suite>
+<suite id="s1-s6" name="06 Loss" source="/home/dcantor/homa-lab/tests/suites/06_loss.robot">
+<kw name="Lab Setup" owner="common" type="SETUP">
+<kw name="Homa Hosts" owner="HomaLab">
+<msg time="2026-10-14T11:44:49.104549" level="INFO">${hosts} = ['h1', 'h2', 'h3', 'h4']</msg>
+<var>${hosts}</var>
+<status status="PASS" start="2026-10-14T11:44:49.104448" elapsed="0.000128"/>
+</kw>
+<kw name="Set Global Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:49.104934" level="INFO">@{HOSTS} = [ h1 | h2 | h3 | h4 ]</msg>
+<arg>@{HOSTS}</arg>
+<arg>@{hosts}</arg>
+<doc>Makes the variable available globally in all tests and suites.</doc>
+<status status="PASS" start="2026-10-14T11:44:49.104671" elapsed="0.000297"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:44:49.104301" elapsed="0.000711"/>
+</kw>
+<test id="s1-s6-t1" name="Every RPC completes through a lossy link" line="10">
+<kw name="Run Loss" owner="HomaLab">
+<msg time="2026-10-14T11:44:50.962963" level="INFO">{
+ "drop_one_in": 50,
+ "port": "eth1",
+ "rtt": {
+  "src": "h2",
+  "dst": "h1",
+  "ipv6": false,
+  "length": 20000,
+  "count": 300,
+  "rc": 0,
+  "errors": [],
+  "min": 290.36,
+  "p10": 322.63,
+  "p20": 333.2,
+  "p30": 341.27,
+  "p40": 349.07,
+  "p50": 356.74,
+  "p60": 367.73,
+  "p70": 378.19,
+  "p80": 389.9,
+  "p90": 421.77,
+  "max": 5862.26,
+  "avg": 694.45,
+  "ok": true
+ },
+ "metrics": {
+  "h2": {
+   "packets_sent_RESEND": 19,
+   "packets_rcvd_RESEND": 21,
+   "resent_packets": 21,
+   "rpc_timeouts": 0,
+   "packets_sent_DATA": 951,
+   "packets_sent_NEED_ACK": 0
+  },
+  "h1": {
+   "packets_sent_RESEND": 21,
+   "packets_rcvd_RESEND": 19,
+   "resent_packets": 9,
+   "rpc_timeouts": 0,
+   "packets_sent_DATA": 939,
+   "packets_sent_NEED_ACK": 10
+  }
+ },
+ "sw_filter": "0p\n Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\nqdisc pfifo 24: parent 10:4 limit 200p\n Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\nqdisc pfifo 28: parent 10:8 limit 200p\n Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\nqdisc clsact ffff: parent ffff:fff1 \n Sent 25701972 bytes 3896 pkt (dropped 77, overlimits 0 requeues 0) \n backlog 0b 0p requeues 0\n\taction order 1: gact action pass\n\t random type netrand drop val 50\n\tSent 6448395 bytes 980 pkt (dropped 21, overlimits 0 requeues 0) \n"
+}</msg>
+<msg time="2026-10-14T11:44:50.963044" level="INFO">1/50 dropped towards h1: 300 RTTs of 20000 B all ok; p50 356.74 p99 None us; h1 sent 21 RESENDs, h2 resent 21 packets</msg>
+<msg time="2026-10-14T11:44:50.963167" level="INFO">${r} = {'drop_one_in': 50, 'port': 'eth1', 'rtt': {'src': 'h2', 'dst': 'h1', 'ipv6': False, 'length': 20000, 'count': 300, 'rc': 0, 'errors': [], 'min': 290.36, 'p10': 322.63, 'p20': 333.2, 'p30': 341.27, 'p...</msg>
+<var>${r}</var>
+<arg>n=50</arg>
+<arg>count=300</arg>
+<status status="PASS" start="2026-10-14T11:44:49.105303" elapsed="1.857904"/>
+</kw>
+<kw name="Set Suite Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:50.963826" level="INFO">${LOSS} = {'drop_one_in': 50, 'port': 'eth1', 'rtt': {'src': 'h2', 'dst': 'h1', 'ipv6': False, 'length': 20000, 'count': 300, 'rc': 0, 'errors': [], 'min': 290.36, 'p10': 322.63, 'p20': 333.2, 'p30': 341.27, 'p...</msg>
+<arg>${LOSS}</arg>
+<arg>${r}</arg>
+<doc>Makes the variable available everywhere within the scope of the current suite.</doc>
+<status status="PASS" start="2026-10-14T11:44:50.963370" elapsed="0.000491"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${r}[rtt][ok]</arg>
+<arg>msg=${r}[rtt]</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:50.963966" elapsed="0.000302"/>
+</kw>
+<kw name="Should Contain" owner="BuiltIn">
+<arg>${r}[sw_filter]</arg>
+<arg>random</arg>
+<doc>Fails if the `container` does not contain the `item` one or more times.</doc>
+<status status="PASS" start="2026-10-14T11:44:50.964355" elapsed="0.000207"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:44:49.105065" elapsed="1.859569"/>
+</test>
+<test id="s1-s6-t2" name="The receiver asked for the missing data and the sender retransmitted it" line="16">
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${LOSS}[metrics][h1][packets_sent_RESEND] &gt; 0</arg>
+<arg>msg=h1 sent no RESEND: ${LOSS}[metrics]</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:50.964971" elapsed="0.000316"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${LOSS}[metrics][h2][resent_packets] &gt; 0</arg>
+<arg>msg=h2 retransmitted nothing: ${LOSS}[metrics]</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:44:50.965378" elapsed="0.000323"/>
+</kw>
+<kw name="Should Be Equal As Integers" owner="BuiltIn">
+<msg time="2026-10-14T11:44:50.965964" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${LOSS}[metrics][h2][rpc_timeouts]</arg>
+<arg>0</arg>
+<arg>msg=an RPC timed out on h2</arg>
+<doc>Fails if objects are unequal after converting them to integers.</doc>
+<status status="PASS" start="2026-10-14T11:44:50.965782" elapsed="0.000226"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:44:50.964756" elapsed="0.001340"/>
+</test>
+<kw name="Switch Qos" owner="HomaLab" type="TEARDOWN">
+<arg>loss</arg>
+<arg>eth1</arg>
+<arg>off</arg>
+<status status="PASS" start="2026-10-14T11:44:50.966389" elapsed="0.190685"/>
+</kw>
+<doc>Loss recovery: sw1 drops 1 in 50 packets towards h1 (any type: data, grants, acks) while h2 runs 300
+round trips of 20 KB with h1. Homa has no connection state to rebuild: the receiver notices missing
+ranges and asks for them (RESEND), the sender retransmits. Every RPC must still complete, intact.</doc>
+<status status="PASS" start="2026-10-14T11:44:49.102389" elapsed="2.054748"/>
+</suite>
+<suite id="s1-s7" name="07 Timers" source="/home/dcantor/homa-lab/tests/suites/07_timers.robot">
+<kw name="Lab Setup" owner="common" type="SETUP">
+<kw name="Homa Hosts" owner="HomaLab">
+<msg time="2026-10-14T11:44:51.159851" level="INFO">${hosts} = ['h1', 'h2', 'h3', 'h4']</msg>
+<var>${hosts}</var>
+<status status="PASS" start="2026-10-14T11:44:51.159721" elapsed="0.000158"/>
+</kw>
+<kw name="Set Global Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:44:51.160246" level="INFO">@{HOSTS} = [ h1 | h2 | h3 | h4 ]</msg>
+<arg>@{HOSTS}</arg>
+<arg>@{hosts}</arg>
+<doc>Makes the variable available globally in all tests and suites.</doc>
+<status status="PASS" start="2026-10-14T11:44:51.159968" elapsed="0.000312"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:44:51.159578" elapsed="0.000745"/>
+</kw>
+<test id="s1-s7-t1" name="Default timers: starved messages trigger spurious RESENDs" line="13">
+<kw name="Set Homa Sysctls" owner="HomaLab">
+<arg>resend_ticks=5</arg>
+<arg>resend_interval=5</arg>
+<arg>timeout_ticks=100</arg>
+<status status="PASS" start="2026-10-14T11:44:51.160563" elapsed="0.220871"/>
+</kw>
+<kw name="Incast Bulk" owner="HomaLab">
+<msg time="2026-10-14T11:45:01.410929" level="INFO">{"mbit": 873.8, "sw_drops": 5975, "resends": 1927, "rpc_timeouts": 0}</msg>
+<msg time="2026-10-14T11:45:01.411121" level="INFO">${d} = {'mbit': 873.8, 'sw_drops': 5975, 'resends': 1927, 'rpc_timeouts': 0}</msg>
+<var>${d}</var>
+<arg>seconds=8</arg>
+<doc>Bulk only (no probes): two senders, 500 KB one-way messages, at the lab's normal rate. Returns throughput, sw1
+drops, and the target's RESEND / RPC timeout counts.</doc>
+<status status="PASS" start="2026-10-14T11:44:51.381595" elapsed="10.029549"/>
+</kw>
+<kw name="Set Suite Variable" owner="BuiltIn">
+<msg time="2026-10-14T11:45:01.411750" level="INFO">${DEF} = {'mbit': 873.8, 'sw_drops': 5975, 'resends': 1927, 'rpc_timeouts': 0}</msg>
+<arg>${DEF}</arg>
+<arg>${d}</arg>
+<doc>Makes the variable available everywhere within the scope of the current suite.</doc>
+<status status="PASS" start="2026-10-14T11:45:01.411324" elapsed="0.000463"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2026-10-14T11:45:01.412066" level="INFO">defaults: {'mbit': 873.8, 'sw_drops': 5975, 'resends': 1927, 'rpc_timeouts': 0}</msg>
+<arg>defaults: ${d}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2026-10-14T11:45:01.411894" elapsed="0.000208"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${d}[resends] &gt; 100</arg>
+<arg>msg=expected spurious RESENDs with the default timers: ${d}</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:45:01.412175" elapsed="0.000262"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:44:51.160361" elapsed="10.252168"/>
+</test>
+<test id="s1-s7-t2" name="Timers scaled to the link speed: no drops, no timeouts, far fewer RESENDs" line="20">
+<kw name="Set Homa Sysctls" owner="HomaLab">
+<arg>resend_ticks=50</arg>
+<arg>resend_interval=20</arg>
+<arg>timeout_ticks=1000</arg>
+<status status="PASS" start="2026-10-14T11:45:01.412879" elapsed="0.391930"/>
+</kw>
+<kw name="Incast Bulk" owner="HomaLab">
+<msg time="2026-10-14T11:45:11.851288" level="INFO">{"mbit": 866.7, "sw_drops": 0, "resends": 274, "rpc_timeouts": 0}</msg>
+<msg time="2026-10-14T11:45:11.851498" level="INFO">${s} = {'mbit': 866.7, 'sw_drops': 0, 'resends': 274, 'rpc_timeouts': 0}</msg>
+<var>${s}</var>
+<arg>seconds=8</arg>
+<doc>Bulk only (no probes): two senders, 500 KB one-way messages, at the lab's normal rate. Returns throughput, sw1
+drops, and the target's RESEND / RPC timeout counts.</doc>
+<status status="PASS" start="2026-10-14T11:45:01.804997" elapsed="10.046523"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2026-10-14T11:45:11.851952" level="INFO">scaled timers: {'mbit': 866.7, 'sw_drops': 0, 'resends': 274, 'rpc_timeouts': 0} (defaults: {'mbit': 873.8, 'sw_drops': 5975, 'resends': 1927, 'rpc_timeouts': 0})</msg>
+<arg>scaled timers: ${s} (defaults: ${DEF})</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2026-10-14T11:45:11.851681" elapsed="0.000306"/>
+</kw>
+<kw name="Should Be Equal As Integers" owner="BuiltIn">
+<msg time="2026-10-14T11:45:11.852244" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${s}[rpc_timeouts]</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to integers.</doc>
+<status status="PASS" start="2026-10-14T11:45:11.852063" elapsed="0.000225"/>
+</kw>
+<kw name="Should Be Equal As Integers" owner="BuiltIn">
+<msg time="2026-10-14T11:45:11.852503" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${s}[sw_drops]</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to integers.</doc>
+<status status="PASS" start="2026-10-14T11:45:11.852359" elapsed="0.000180"/>
+</kw>
+<kw name="Should Be True" owner="BuiltIn">
+<arg>${s}[resends] * 3 &lt; ${DEF}[resends]</arg>
+<arg>msg=scaled ${s}[resends] vs default ${DEF}[resends] RESENDs</arg>
+<doc>Fails if the given condition is not true.</doc>
+<status status="PASS" start="2026-10-14T11:45:11.852608" elapsed="0.000271"/>
+</kw>
+<status status="PASS" start="2026-10-14T11:45:01.412662" elapsed="10.440294"/>
+</test>
+<kw name="Set Homa Sysctls" owner="HomaLab" type="TEARDOWN">
+<arg>resend_ticks=5</arg>
+<arg>resend_interval=5</arg>
+<arg>timeout_ticks=100</arg>
+<status status="PASS" start="2026-10-14T11:45:11.853184" elapsed="0.395797"/>
+</kw>
+<doc>A finding of this lab, kept as a test. Two senders push 500 KB messages into h1's 1 Gbit/s port. Homa's
+SRPT grants put the message nearest completion at the top scheduled priority and park the others at
+lower ones, which strict priority queues then starve for many milliseconds. Homa's resend timer
+(resend_ticks = 5 ms of silence) assumes a 25-100 Gbit/s network where that never lasts so long: the
+receiver asks for data that is only queued, the sender sends it again into the same starved queue, and
+sw1 overflows and RPCs time out. Scaled to this link speed (x10) the spurious RESENDs mostly vanish.</doc>
+<status status="PASS" start="2026-10-14T11:44:51.157680" elapsed="21.091361"/>
+</suite>
+<status status="PASS" start="2026-10-14T11:42:00.111216" elapsed="192.138632"/>
+</suite>
+<statistics>
+<total>
+<stat pass="26" fail="0" skip="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat name="homa lab" id="s1" pass="26" fail="0" skip="0">homa lab</stat>
+<stat name="01 Platform" id="s1-s1" pass="5" fail="0" skip="0">homa lab.01 Platform</stat>
+<stat name="02 Function" id="s1-s2" pass="5" fail="0" skip="0">homa lab.02 Function</stat>
+<stat name="03 Wire" id="s1-s3" pass="6" fail="0" skip="0">homa lab.03 Wire</stat>
+<stat name="04 Compare" id="s1-s4" pass="2" fail="0" skip="0">homa lab.04 Compare</stat>
+<stat name="05 Incast" id="s1-s5" pass="4" fail="0" skip="0">homa lab.05 Incast</stat>
+<stat name="06 Loss" id="s1-s6" pass="2" fail="0" skip="0">homa lab.06 Loss</stat>
+<stat name="07 Timers" id="s1-s7" pass="2" fail="0" skip="0">homa lab.07 Timers</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
