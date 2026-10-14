@@ -202,7 +202,7 @@ def chart_incast():
 
 
 def results():
-    out = LAB / "results" / "latest" / "output.xml"
+    out = LAB / "tests" / "results_latest" / "output.xml"
     root = ET.parse(out).getroot()
     rows, passed, failed = [], 0, 0
     for su in root.iter("suite"):

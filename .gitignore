@@ -4,3 +4,4 @@ results/
 tests/.venv/
 __pycache__/
 *.pyc
+tests/results_*

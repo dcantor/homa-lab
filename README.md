@@ -22,7 +22,7 @@ priority queues vs FIFO), and protocol behaviour (priorities, grants, loss recov
 ./lab.sh image        # once, ~10 min: Ubuntu 26.04 + mainline 6.17.8 + homa.ko built and unit-tested (840 tests)
 ./lab.sh up && ./lab.sh wait
 ./lab.sh verify       # kernel + module, sw1 policy, jumbo ping matrix v4/v6, a Homa RTT between every pair
-./lab.sh test         # Robot Framework, results/<timestamp>/report.html (~12 min)
+./lab.sh test         # Robot Framework, tests/results_<timestamp>/report.html (~12 min)
 ./lab.sh down
 ```
 Resources: 5 VMs, 9 GiB RAM, 10 vCPUs. Disk: about 4 GB of base image plus small overlays.
@@ -111,7 +111,7 @@ Slides: `docs/homa-lab.pptx` (22 slides with speaker notes, the same data), rebu
 ## Layout
 `lab.conf` (source of truth) · `lab.sh` · `networks/` · `image/` (builder script, sw-qos, services, dissector) ·
 `tools/build_image.sh`, `tools/homalab.py` (all measurements; JSON out) · `tests/` (Robot; `tests/resources/HomaLab.py`
-wraps homalab.py) · `results/` (per run: Robot output and `state/`, the sysctls / module / sw1 policy before the run).
+wraps homalab.py) · `tests/results_<timestamp>/` (per run: Robot output and `state/`, the sysctls / module / sw1 policy before the run).
 
 ## Not yet
 A portal, NMS metrics (a `/proc/net/homa_metrics` exporter), the upstream patch-series

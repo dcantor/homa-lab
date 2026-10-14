@@ -342,7 +342,7 @@ usage: $(basename "$0") <command> [node...]
   exec <node|hosts|all> <cmd>   run a command (hosts/all: in parallel)
   bench <sub> [opts]   rtt SRC DST | compare | incast | loss | capture | metrics HOST  (tools/homalab.py --help)
   verify               module + kernel, sw1 policy, jumbo ping matrix v4/v6, one Homa RPC per host pair
-  test [robot args]    Robot Framework suites, results/<timestamp>/
+  test [robot args]    Robot Framework suites, tests/results_<timestamp>/
   ssh <node> [cmd] | console <node> | log <node> [n]
   rebuild [node..]     re-define domains and cloud-init seeds (keeps disks; stop the nodes first)
   clean [node..]       destroy VMs and delete their disks (base image kept)

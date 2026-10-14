@@ -215,7 +215,7 @@ Homa is a loading dock with a dispatcher. Small parcels may drive straight in, i
 ./lab.sh up           # define the networks and VMs, start them
 ./lab.sh wait         # until SSH answers and cloud-init is done (~1 min)
 ./lab.sh verify       # kernel + module, sw1 policy, jumbo pings, a Homa RTT between every pair
-./lab.sh test         # all Robot suites (~12 min) → results/&lt;timestamp&gt;/report.html
+./lab.sh test         # all Robot suites (~12 min) → tests/results_→ results/&lt;timestamp&gt;/report.htmllt;timestamp→ results/&lt;timestamp&gt;/report.htmlgt;/report.html
 ./lab.sh down         # shut the VMs down (5 VMs, 9 GiB RAM, 10 vCPUs while running)</pre>
 <p>Log in with <span class="mono">./lab.sh ssh h1</span> (user <span class="mono">lab</span>, password <span class="mono">lab</span>, and your SSH key), or the serial console with <span class="mono">./lab.sh console h1</span>. <span class="mono">./lab.sh exec hosts '&lt;command&gt;'</span> runs a command on all four hosts in parallel. The Lab Hub (port 8088) shows the lab's VMs and can power it.</p>
 <div class="box"><b>Everything is measured from the host.</b> <span class="mono">tools/homalab.py</span> is the single place that drives experiments: it reads <span class="mono">lab.sh inventory</span>, runs Homa's tools over SSH (every remote command carries its own <span class="mono">timeout</span>), reads sw1's queue counters and Homa's kernel metrics, and prints JSON. <span class="mono">lab.sh bench</span>, the Robot suites and this document all use it.</div>
@@ -323,7 +323,7 @@ Homa is a loading dock with a dispatcher. Small parcels may drive straight in, i
 
 <!-- ================================================================== 14 -->
 <h2>15. Tests</h2>
-<p><span class="mono">./lab.sh test</span> runs Robot Framework over <span class="mono">tests/suites</span>; the keywords (<span class="mono">tests/resources/HomaLab.py</span>) wrap <span class="mono">tools/homalab.py</span>. A run takes about 12 minutes and leaves <span class="mono">results/&lt;timestamp&gt;/</span> with Robot's report and log and <span class="mono">state/</span> — every host's Homa sysctls and module version and sw1's policy before the run. Runs take a lock (<span class="mono">/tmp/homa-lab-test.lock</span>); suites that change sw1 or sysctls put them back in their teardown.</p>
+<p><span class="mono">./lab.sh test</span> runs Robot Framework over <span class="mono">tests/suites</span>; the keywords (<span class="mono">tests/resources/HomaLab.py</span>) wrap <span class="mono">tools/homalab.py</span>. A run takes about 12 minutes and leaves <span class="mono">tests/results_leaves <span class="mono">results/&lt;timestamp&gt;/</span>lt;timestampleaves <span class="mono">results/&lt;timestamp&gt;/</span>gt;/</span> with Robot's report and log and <span class="mono">state/</span> — every host's Homa sysctls and module version and sw1's policy before the run. Runs take a lock (<span class="mono">/tmp/homa-lab-test.lock</span>); suites that change sw1 or sysctls put them back in their teardown.</p>
 <table>
 <tr><th>suite</th><th>what it checks</th></tr>
 <tr><td>01 platform</td><td>the pinned kernel; the loaded module is the installed build at the pinned commit; unit tests passed in the image; sysctls, metrics, protocol-146 sockets (v4/v6); services; sw1's bridge and policy</td></tr>
@@ -411,7 +411,7 @@ tools/build_image.sh    builder VM → images/homa-base.qcow2
 tools/homalab.py        every measurement → JSON
 tools/build_walkthrough.py   this document (docs/data/ ← the lab; docs/*.html → PDF)
 tests/                  Robot: suites/01-07, resources/, run.sh, setup.sh
-images/ nodes/ results/ build products, VM disks and seeds, test runs (not in git)</pre>
+images/ nodes/ tests/results_* build products, VM disks and seeds, test runs (not in git)</pre>
 
 </body>
 </html>
