@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this lab. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] - 2026-10-14
+### Added
+- NMS: Prometheus scrapes the portal (job `homa-lab`, lab-portal 0.39.0), alert group `homa-lab`, Grafana dashboard
+  **homa-lab: overview (Homa kernel module)**.
+- Portal `/metrics`: `sw1_port_bytes_total` / `sw1_port_drops_total` (per port, any policy), `sw1_queue_bytes_total`,
+  `sw1_qos_mode`, `homa_link_mbps`, `homa_lab_run_active`; sw1 series carry the `host` the port faces.
+
 ## [0.2.0] - 2026-10-14
 ### Added
 - Portal (`webapp/`, port 8108, user unit `homa-lab-webapp`, `./lab.sh webapp`): the topology with live traffic and

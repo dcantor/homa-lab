@@ -48,7 +48,8 @@ behind bulk messages in the same server thread.
 sign-in. It shows the topology with live traffic per sw1 port, sw1's eight queues per port, and Homa's counters per host
 (RESENDs and timeouts highlighted). It switches sw1's policy (prio / FIFO / off) and the resend timers (default / ×10),
 runs the measurements (matrix, compare, incast, loss, capture), verify and the Robot suites, and links the last test
-report. `/metrics` exports the counters for Prometheus.
+report. `/metrics` exports the counters; the NMS scrapes it (job `homa-lab`, alert group `homa-lab`, Grafana dashboard
+**homa-lab: overview (Homa kernel module)**).
 
 ## Commands
 ```bash
@@ -121,5 +122,4 @@ Slides: `docs/homa-lab.pptx` (22 slides with speaker notes, the same data), rebu
 wraps homalab.py) · `tests/results_<date>_<time>/` (per run: Robot output and `state/`, the sysctls / module / sw1 policy before the run; `results/latest` links the newest for Lab Hub) · `webapp/` (the portal).
 
 ## Not yet
-NMS wiring (Prometheus job + Grafana dashboard for the portal's `/metrics`), the upstream patch-series
-kernel as a second track, the hijack/GSO investigation.
+The upstream patch-series kernel as a second track, the hijack/GSO investigation.

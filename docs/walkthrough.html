@@ -46,7 +46,7 @@ svg text { font-family: "Inter", "Segoe UI", sans-serif; }
   <h1>homa-lab</h1>
   <div class="sub">Testing the Linux kernel module that implements the Homa transport protocol: four hosts running <span class="mono">homa.ko</span>, a switch with real priority queues, and experiments that show what Homa does on the wire, under incast, under loss — and where its defaults stop fitting.</div>
   <div class="meta">
-    Version 0.2.0 · 14 October 2026 · 26 of 26 tests passing<br>
+    Version 0.2.1 · 14 October 2026 · 26 of 26 tests passing<br>
     Lab directory <span class="mono">~/homa-lab</span> (local git repository) · Lab Hub card <span class="mono">homa-lab</span><br>
     Kernel <span class="mono">6.17.8-061708-generic</span> · HomaModule <span class="mono">main @ 65cecd7</span> (2026-10-08)
   </div>
@@ -675,7 +675,6 @@ net.homa.wmem_max = 100000000</pre>
 <!-- ================================================================== 18 -->
 <h2>19. What is not built yet</h2>
 <ul>
-  <li>NMS integration: the portal (port 8108, since 0.2.0) already exports Homa's counters and sw1's queues on <span class="mono">/metrics</span>; a Prometheus job and a Grafana board are next.</li>
   <li>A second kernel track built from the upstream Homa patch series, to compare the stripped upstream version with the full module.</li>
   <li>The offload investigation: why hijacked and GSO'd large messages time out here.</li>
   <li>HomaModule's cluster benchmarks (<span class="mono">cp_vs_tcp</span>, <span class="mono">cp_load</span>) adapted to four nodes.</li>

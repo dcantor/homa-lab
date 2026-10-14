@@ -270,17 +270,32 @@ def metrics():
         gauge("homa_resend_ticks", "net.homa.resend_ticks (ms of silence before a RESEND)")
         for h, s in v["hosts"].items():
             if s.get("up"): out.append(line("homa_resend_ticks", {**lab, "node": h}, s["timers"]["resend_ticks"] or 0))
+        gauge("homa_link_mbps", "net.homa.link_mbps (the bottleneck rate Homa's pacer and grants assume)")
+        for h, s in v["hosts"].items():
+            if s.get("up"): out.append(line("homa_link_mbps", {**lab, "node": h}, s["link_mbps"] or 0))
         gauge("homa_counter_total", "/proc/net/homa_metrics, summed over cores (a selection)", "counter")
         for h, s in v["hosts"].items():
             for k, x in (s.get("counters") or {}).items(): out.append(line("homa_counter_total", {**lab, "node": h, "counter": k}, x))
-        sw = v["sw1"]
+        sw = v["sw1"]; to = {h["sw_port"]: h["name"] for h in H.inventory()["hosts"]}
         if "error" not in sw:
+            gauge("sw1_qos_mode", "1 for sw1's current egress policy on the port (prio, fifo or off)")
+            for port, p in sw.items(): out.append(line("sw1_qos_mode", {**lab, "port": port, "host": to.get(port, ""), "mode": p.get("mode") or "unknown"}, 1))
+            gauge("sw1_port_bytes_total", "Bytes sw1 sent out of the port towards its host (any policy)", "counter")
+            gauge("sw1_port_drops_total", "Packets sw1 dropped on the port (any policy)", "counter")
+            for port, p in sw.items():
+                t = p.get("total") or {}
+                out.append(line("sw1_port_bytes_total", {**lab, "port": port, "host": to.get(port, "")}, t.get("bytes", 0)))
+                out.append(line("sw1_port_drops_total", {**lab, "port": port, "host": to.get(port, "")}, t.get("drops", 0)))
             gauge("sw1_queue_packets_total", "Packets sent by sw1's egress queue (band 7 = highest priority)", "counter")
             gauge("sw1_queue_drops_total", "Packets dropped by sw1's egress queue", "counter")
+            gauge("sw1_queue_bytes_total", "Bytes sent by sw1's egress queue", "counter")
             for port, p in sw.items():
                 for band, q in (p.get("prio") or {}).items():
-                    out.append(line("sw1_queue_packets_total", {**lab, "port": port, "band": band}, q["packets"]))
-                    out.append(line("sw1_queue_drops_total", {**lab, "port": port, "band": band}, q["drops"]))
+                    out.append(line("sw1_queue_packets_total", {**lab, "port": port, "host": to.get(port, ""), "band": band}, q["packets"]))
+                    out.append(line("sw1_queue_drops_total", {**lab, "port": port, "host": to.get(port, ""), "band": band}, q["drops"]))
+                    out.append(line("sw1_queue_bytes_total", {**lab, "port": port, "host": to.get(port, ""), "band": band}, q["bytes"]))
+    gauge("homa_lab_run_active", "1 while a portal run (tests or a measurement) is going: they load the network, change sw1 and the timers on purpose")
+    out.append(line("homa_lab_run_active", lab, int(busy())))
     out += run_metrics(NAME, registry.list())
     return exposition(out + metrics_generated(NAME))
 
