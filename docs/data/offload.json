@@ -1,0 +1,140 @@
+{
+ "src": "h2",
+ "dst": "h1",
+ "count": 5,
+ "sizes": [
+  1000,
+  10000,
+  1000000
+ ],
+ "configs": {
+  "default": [
+   {
+    "size": 1000,
+    "ok": true,
+    "p50": 136.54,
+    "p90": 156.48,
+    "frames_sent": 15,
+    "packets_received": 15,
+    "resends": 0,
+    "timeouts": 0
+   },
+   {
+    "size": 10000,
+    "ok": true,
+    "p50": 182.09,
+    "p90": 188.99,
+    "frames_sent": 30,
+    "packets_received": 30,
+    "resends": 0,
+    "timeouts": 0
+   },
+   {
+    "size": 1000000,
+    "ok": true,
+    "p50": 15434.07,
+    "p90": 15517.98,
+    "frames_sent": 1695,
+    "packets_received": 1695,
+    "resends": 0,
+    "timeouts": 0
+   }
+  ],
+  "gso": [
+   {
+    "size": 1000,
+    "ok": true,
+    "p50": 142.03,
+    "p90": 158.37,
+    "frames_sent": 15,
+    "packets_received": 15,
+    "resends": 0,
+    "timeouts": 0
+   },
+   {
+    "size": 10000,
+    "ok": false,
+    "p50": null,
+    "p90": null,
+    "frames_sent": 20,
+    "packets_received": 0,
+    "resends": 19,
+    "timeouts": 1
+   },
+   {
+    "size": 1000000,
+    "ok": false,
+    "p50": null,
+    "p90": null,
+    "frames_sent": 156,
+    "packets_received": 0,
+    "resends": 57,
+    "timeouts": 2
+   }
+  ],
+  "gso_guest": [
+   {
+    "size": 1000,
+    "ok": true,
+    "p50": 159.74,
+    "p90": 187.64,
+    "frames_sent": 15,
+    "packets_received": 15,
+    "resends": 0,
+    "timeouts": 0
+   },
+   {
+    "size": 10000,
+    "ok": true,
+    "p50": 223.7,
+    "p90": 258.11,
+    "frames_sent": 15,
+    "packets_received": 30,
+    "resends": 0,
+    "timeouts": 0
+   },
+   {
+    "size": 1000000,
+    "ok": true,
+    "p50": 15507.63,
+    "p90": 15717.05,
+    "frames_sent": 255,
+    "packets_received": 1695,
+    "resends": 0,
+    "timeouts": 0
+   }
+  ],
+  "hijack": [
+   {
+    "size": 1000,
+    "ok": true,
+    "p50": 155.15,
+    "p90": 202.62,
+    "frames_sent": 15,
+    "packets_received": 15,
+    "resends": 0,
+    "timeouts": 0
+   },
+   {
+    "size": 10000,
+    "ok": false,
+    "p50": null,
+    "p90": null,
+    "frames_sent": 11938,
+    "packets_received": 569,
+    "resends": 22323,
+    "timeouts": 568
+   },
+   {
+    "size": 1000000,
+    "ok": false,
+    "p50": null,
+    "p90": null,
+    "frames_sent": 897,
+    "packets_received": 0,
+    "resends": 57,
+    "timeouts": 2
+   }
+  ]
+ }
+}

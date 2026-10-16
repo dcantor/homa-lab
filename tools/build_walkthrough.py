@@ -93,6 +93,7 @@ def collect():
     lib.set_homa_sysctls("resend_ticks=5", "resend_interval=5", "timeout_ticks=100")
     put("timers", {"default": d, "scaled": s})
     put("metrics_h1", L.metrics("h1"))
+    put("offload", L.offload(("default", "gso", "gso_guest", "hijack"), (1000, 10000, 1000000), 5))   # section 14
     L.qos_apply("prio")
 
 
@@ -144,6 +145,20 @@ def table_loss():
             f"<tr><td>packets retransmitted by h2</td><td class='num'>{m['h2']['resent_packets']}</td></tr>"
             f"<tr><td>RESENDs sent by h2 (receiver of the replies)</td><td class='num'>{m['h2']['packets_sent_RESEND']}</td></tr>"
             f"<tr><td>RPC timeouts (h1 / h2)</td><td class='num'>{m['h1']['rpc_timeouts']} / {m['h2']['rpc_timeouts']}</td></tr></table>")
+
+
+def table_offload():
+    o = j("offload"); names = {"default": "defaults (one frame per packet)", "gso": "native GSO, guest TSO on", "gso_guest": "native GSO, guest segments (TSO off)",
+                                "hijack": "TCP hijacking", "hijack_gso": "TCP hijacking + GSO"}
+    rows = []
+    for name, rs in o["configs"].items():
+        for r in rs:
+            kb = r["size"] // 1000
+            rows.append(f"<tr><td>{E(names.get(name, name))}</td><td class='num'>{f'{kb} KB' if kb < 1000 else f'{kb // 1000} MB'}</td>"
+                        f"<td class='num {'' if r['ok'] else 'bad'}'>{'ok' if r['ok'] else 'lost'}</td><td class='num'>{ms(r['p50']) if r['ok'] and r.get('p50') else '–'}</td>"
+                        f"<td class='num'>{r['frames_sent']}</td><td class='num'>{r['packets_received']}</td></tr>")
+    return ("<table><tr><th>configuration</th><th class='num'>message</th><th class='num'>result</th><th class='num'>p50 (ms)</th>"
+            "<th class='num'>frames sent</th><th class='num'>packets received</th></tr>" + "".join(rows) + "</table>")
 
 
 def table_capture():
@@ -239,7 +254,7 @@ def build():
     s = s.replace("{{version}}", (LAB / "VERSION").read_text().strip()).replace("{{date}}", time.strftime("%-d %B %Y"))
     s = s.replace("{{tests}}", str(passed + failed)).replace("{{passed}}", str(passed))
     s = s.replace("{{chart:incast}}", chart_incast())
-    for name, fn in (("compare", table_compare), ("incast", table_incast), ("timers", table_timers), ("loss", table_loss), ("capture", table_capture)):
+    for name, fn in (("compare", table_compare), ("incast", table_incast), ("timers", table_timers), ("loss", table_loss), ("capture", table_capture), ("offload", table_offload)):
         s = s.replace(f"{{{{table:{name}}}}}", fn())
     s = re.sub(r"\{\{text:([\w]+)\}\}", lambda m: E((DATA / f"{m.group(1)}.txt").read_text().rstrip()), s)
     s = re.sub(r"\{\{val:([\w.]+)\}\}", lambda m: E(val(m.group(1))), s)

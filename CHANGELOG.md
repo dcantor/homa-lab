@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this lab. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-10-15
+### Added
+- The segmentation offload investigation (2026-10-14), kept as a measurement and tests: `./lab.sh bench offload`
+  (`tools/homalab.py offload`: round trips per configuration — default, gso, gso_guest, hijack, hijack_gso — and size,
+  with frames sent against packets received), Robot suite 08 (4 tests; the hijack bug test is tagged `known-bug` and
+  fails once the pinned module is fixed), and walkthrough section 14.
+- `patches/0001-hijack-gro-read-header-from-frag0.patch`: fixes TCP hijacking on receivers that leave headers in
+  frag0 (virtio_net). `patches/README.md` has the bug report draft for HomaModule.
+### Changed
+- README findings 3 and 4 rewritten. Native GSO is lost on the lab host when the guest NIC does TSO, and works when the
+  guest segments. TCP hijacking loses full-size packets because of a GRO bug in the module. TCP's lead on long messages
+  is not TSO (it stayed with offload working for Homa); the cause is open.
+### Fixed
+- The walkthrough's Tests section had a garbled sentence about the results folder.
+
 ## [0.2.1] - 2026-10-14
 ### Added
 - NMS: Prometheus scrapes the portal (job `homa-lab`, lab-portal 0.39.0), alert group `homa-lab`, Grafana dashboard

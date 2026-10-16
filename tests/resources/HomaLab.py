@@ -117,6 +117,15 @@ class HomaLab:
         return r
 
     @keyword
+    def run_offload(self, *configs, sizes="1000,10000,1000000", count=5):
+        """tools/homalab.py offload for the given configurations; returns {config: {size: row}}."""
+        r = L.offload(list(configs), [int(x) for x in str(sizes).split(",")], int(count))
+        for name, rows in r["configs"].items():
+            self._rows(f"offload: {name}", [{"size": x["size"], "ok": x["ok"], "p50 us": x["p50"], "frames sent": x["frames_sent"],
+                                              "DATA received": x["packets_received"], "RESENDs": x["resends"], "timeouts": x["timeouts"]} for x in rows])
+        return {name: {str(x["size"]): x for x in rows} for name, rows in r["configs"].items()}
+
+    @keyword
     def capture_homa(self, seconds=4):
         r = L.capture(int(seconds))
         logger.info(json.dumps(r, indent=1))
@@ -136,6 +145,13 @@ class HomaLab:
                "rpc_timeouts": d.get("rpc_timeouts", 0)}
         logger.info(json.dumps(out))
         return out
+
+    def _rows(self, title, rows):
+        """A list of dicts as an HTML table in the log, one column per key."""
+        cols = list(rows[0]) if rows else []
+        html = [f"<b>{title}</b><table border=1 cellpadding=3><tr>" + "".join(f"<th>{c}</th>" for c in cols) + "</tr>"]
+        for r in rows: html.append("<tr>" + "".join(f"<td>{r.get(c, '')}</td>" for c in cols) + "</tr>")
+        logger.info("".join(html) + "</table>", html=True)
 
     def _table(self, title, rows):
         html = [f"<b>{title}</b><table border=1 cellpadding=3><tr><th></th><th>messages</th><th>n</th><th>p50 µs</th><th>p99 µs</th><th>p99.9 µs</th></tr>"]

@@ -35,6 +35,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .step .n { width: 18pt; height: 18pt; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 9pt; display: flex; align-items: center; justify-content: center; margin-top: 1pt; }
 .pill { display: inline-block; padding: 0 6pt; border-radius: 9pt; font-size: 8.5pt; border: 1px solid var(--line); color: #334155; }
 svg text { font-family: "Inter", "Segoe UI", sans-serif; }
+td.bad { color: var(--bad); font-weight: 600; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
 </style>
 
@@ -46,7 +47,7 @@ svg text { font-family: "Inter", "Segoe UI", sans-serif; }
   <h1>homa-lab</h1>
   <div class="sub">Testing the Linux kernel module that implements the Homa transport protocol: four hosts running <span class="mono">homa.ko</span>, a switch with real priority queues, and experiments that show what Homa does on the wire, under incast, under loss — and where its defaults stop fitting.</div>
   <div class="meta">
-    Version 0.2.1 · 14 October 2026 · 26 of 26 tests passing<br>
+    Version 0.3.0 · 15 October 2026 · 30 of 30 tests passing<br>
     Lab directory <span class="mono">~/homa-lab</span> (local git repository) · Lab Hub card <span class="mono">homa-lab</span><br>
     Kernel <span class="mono">6.17.8-061708-generic</span> · HomaModule <span class="mono">main @ 65cecd7</span> (2026-10-08)
   </div>
@@ -67,12 +68,13 @@ svg text { font-family: "Inter", "Segoe UI", sans-serif; }
   <div>11. Walkthrough E — incast</div>
   <div>12. Walkthrough F — loss recovery</div>
   <div>13. Walkthrough G — the resend timers</div>
-  <div>14. Configuration and metrics</div>
-  <div>15. Tests</div>
-  <div>16. Findings</div>
-  <div>17. Lessons learned building it</div>
-  <div>18. Troubleshooting</div>
-  <div>19. What is not built yet</div>
+  <div>14. Walkthrough H — segmentation offload</div>
+  <div>15. Configuration and metrics</div>
+  <div>16. Tests</div>
+  <div>17. Findings</div>
+  <div>18. Lessons learned building it</div>
+  <div>19. Troubleshooting</div>
+  <div>20. What is not built yet</div>
   <div>Appendix A — reference: lab.sh</div>
   <div>Appendix B — sw-qos</div>
   <div>Appendix C — lab.conf and layout</div>
@@ -233,7 +235,7 @@ image: homa-base.qcow2 — kernel 6.17.8-061708-generic, HomaModule 65cecd7; sw1
 <tr><td>VMs, not containers</td><td>libvirt/KVM, 5 domains <span class="mono">homa-*</span></td><td>a kernel module needs its own kernel; containers share the host's</td></tr>
 <tr><td>kernel</td><td>mainline 6.17.8 (kernel.ubuntu.com) on Ubuntu 26.04</td><td>HomaModule's <span class="mono">main</span> is developed against 6.17.8; the host's 7.0 is "compiles, not actively supported"</td></tr>
 <tr><td>module</td><td>HomaModule <span class="mono">main @ 65cecd7</span></td><td>pinned in <span class="mono">lab.conf</span>; changing it is one line and <span class="mono">lab.sh image --force</span></td></tr>
-<tr><td>links</td><td>one isolated libvirt bridge per link, MTU 9000</td><td>the UDP tunnels the other labs use lost Homa's bursts in the host's socket buffer (section 17); bridges also give the virtio NICs TSO</td></tr>
+<tr><td>links</td><td>one isolated libvirt bridge per link, MTU 9000</td><td>the UDP tunnels the other labs use lost Homa's bursts in the host's socket buffer (section 18); bridges also give the virtio NICs TSO</td></tr>
 <tr><td>bottleneck</td><td>sw1 shapes each port to 1 Gbit/s; hosts set <span class="mono">link_mbps=1000</span></td><td>a defined, shared bottleneck at the receiver's downlink; Homa's default <span class="mono">link_mbps</span> assumes 25 Gbit/s</td></tr>
 <tr><td>priority queues</td><td><span class="mono">tc prio</span>, 8 strict bands, flower on <span class="mono">ip_tos</span></td><td>what HomaModule's INSTALL.md asks of the switch: top 3 bits of DSCP / traffic class select the queue, priority 7 served first</td></tr>
 <tr><td>sw1 offloads</td><td>GRO, GSO, TSO and <span class="mono">rx-gro-hw</span> off on its ports</td><td>a switch port queues wire-size frames, not 64 KB aggregates</td></tr>
@@ -246,7 +248,7 @@ image: homa-base.qcow2 — kernel 6.17.8-061708-generic, HomaModule 65cecd7; sw1
 <div class="step"><div class="n">1</div><div>Disable unattended upgrades and hold the kernel packages — the lab must not change under its tests.</div></div>
 <div class="step"><div class="n">2</div><div>Install the four mainline 6.17.8 packages (image, modules, headers) and make GRUB boot it by name; the distribution kernel stays installed as a fallback.</div></div>
 <div class="step"><div class="n">3</div><div>Clone HomaModule, check out the pinned commit, <span class="mono">make</span> against the 6.17.8 headers, install <span class="mono">homa.ko</span> into <span class="mono">/lib/modules/6.17.8-061708-generic/updates/</span>, build <span class="mono">util/</span> (cp_node, homa_test, server, homa_prio, …) into <span class="mono">/usr/local/bin</span>.</div></div>
-<div class="step"><div class="n">4</div><div>Build and run the module's <b>unit tests</b> — a user-space harness that compiles the module's sources against mocks of the kernel (840 tests). Two definitions are needed for the Ubuntu headers (section 17). The result is kept in <span class="mono">/var/log/homa-unit.result</span> and checked by suite 01.</div></div>
+<div class="step"><div class="n">4</div><div>Build and run the module's <b>unit tests</b> — a user-space harness that compiles the module's sources against mocks of the kernel (840 tests). Two definitions are needed for the Ubuntu headers (section 18). The result is kept in <span class="mono">/var/log/homa-unit.result</span> and checked by suite 01.</div></div>
 <div class="step"><div class="n">5</div><div>Install the lab's pieces: <span class="mono">sw-qos</span>, the systemd units for homa_prio and the test servers, the Homa dissector for tshark. Generalise the disk (machine-id, SSH host keys, cloud-init state).</div></div>
 <p>Each node then boots with its own cloud-init seed: addresses, the <span class="mono">lab</span> user with your SSH key, <span class="mono">/etc/hosts</span> (h1–h4, and <span class="mono">node1</span>–<span class="mono">node4</span>, the names cp_node expects), <span class="mono">homa</span> in <span class="mono">modules-load.d</span>, the Homa sysctls, and the services; sw1 gets its bridge and <span class="mono">sw-qos</span> policy instead.</p>
 <pre>+ make -j4 LINUX_VERSION=6.17.8-061708-generic KDIR=/lib/modules/6.17.8-061708-generic/build &#x27;CINCLUDES=-I. -I.. $(KERN_INCLUDES) -include $(KDIR)/include/linux/kconfig.h -include lab-kconfig.h&#x27;
@@ -354,7 +356,7 @@ br0 port eth4 forwarding
 
 <!-- ================================================================== 7 -->
 <h2 class="page">8. Walkthrough B — one RPC on the wire</h2>
-<p>The lab captures with tcpdump on <b>sw1's port towards h1</b>, which sees both directions before either host touches them, and decodes with tshark and the lab's own dissector, <span class="mono">image/homa.lua</span> (HomaModule's <span class="mono">dissector/</span> still expects IP protocol 253 and the pre-2024 headers). Capturing on h1 itself would miss packets: Homa's GRO handler consumes many arriving GRANT and DATA packets before tcpdump's tap (section 17). <span class="mono">homa_test h2:4100 --count 1 --length 100 rtt</span> from h1 — it runs ten warm-up RPCs before the measured one:</p>
+<p>The lab captures with tcpdump on <b>sw1's port towards h1</b>, which sees both directions before either host touches them, and decodes with tshark and the lab's own dissector, <span class="mono">image/homa.lua</span> (HomaModule's <span class="mono">dissector/</span> still expects IP protocol 253 and the pre-2024 headers). Capturing on h1 itself would miss packets: Homa's GRO handler consumes many arriving GRANT and DATA packets before tcpdump's tap (section 18). <span class="mono">homa_test h2:4100 --count 1 --length 100 rtt</span> from h1 — it runs ten warm-up RPCs before the measured one:</p>
 <pre style="font-size:7.6pt">   0.000 ms   h1 → h2  prio 7    190 B  DATA 32842 → 4100 id=1219372 off=0 len=100 msg=100
    0.208 ms   h2 → h1  prio 7    190 B  DATA 4100 → 32842 id=1219372 off=0 len=100 msg=100
    0.305 ms   h1 → h2  prio 7     96 B  CUTOFFS 32842 → 4100 id=1219372
@@ -513,7 +515,7 @@ qdisc clsact ffff: parent ffff:fff1
 <p><span class="mono">lab.sh bench compare</span> runs HomaModule's <span class="mono">cp_node</span> client on h1 against the cp_node servers on h2–h4, first over Homa, then over TCP, with the same workload: message sizes drawn from Homa's <b>W3</b> distribution (mostly small messages, a long tail of large ones), 0.3 Gbit/s offered, up to 8 RPCs outstanding, 12 s each. cp_node records every RPC's round-trip time; the lab groups them by size.</p>
 <table><tr><th rowspan=2>messages</th><th colspan=4>Homa (ms)</th><th colspan=4>TCP (ms)</th></tr><tr><th class='num'>n</th><th class='num'>p50</th><th class='num'>p99</th><th class='num'>p99.9</th><th class='num'>n</th><th class='num'>p50</th><th class='num'>p99</th><th class='num'>p99.9</th></tr><tr><td>short (≤1 KB)</td><td class='num'>145668</td><td class='num'>0.29</td><td class='num'>2.32</td><td class='num'>7.16</td><td class='num'>154322</td><td class='num'>0.32</td><td class='num'>4.00</td><td class='num'>12.0</td></tr><tr><td>medium (1-100 KB)</td><td class='num'>23420</td><td class='num'>0.33</td><td class='num'>2.61</td><td class='num'>7.65</td><td class='num'>24849</td><td class='num'>0.34</td><td class='num'>4.09</td><td class='num'>13.2</td></tr><tr><td>long (&gt;100 KB)</td><td class='num'>801</td><td class='num'>3.09</td><td class='num'>20.9</td><td class='num'>26.0</td><td class='num'>799</td><td class='num'>2.14</td><td class='num'>15.9</td><td class='num'>18.0</td></tr></table>
 <p class="cap">Round-trip times in ms. n = RPCs in the class.</p>
-<p>At this light load the medians are close — within about 10%, one way or the other between runs — but Homa's tail for short and medium messages is lower: its p99 is roughly 0.6× TCP's. TCP is better for long messages here, and the reason is specific to this setup: the virtio NICs give TCP segmentation offload (TSO), so TCP hands the NIC 64 KB at a time, while Homa sends 9 KB packets one by one (its own software GSO is "temporarily broken" per its INSTALL.md, and its TCP-hijacking mode failed for large messages here — section 16). Suite 04 records this run and only fails if Homa's short-message p99 is more than 1.5× TCP's.</p>
+<p>At this light load the medians are close — within about 10%, one way or the other between runs — but Homa's tail for short and medium messages is lower: its p99 is roughly 0.6× TCP's. TCP is better for long messages here, and the reason is specific to this setup: the virtio NICs give TCP segmentation offload (TSO), so TCP hands the NIC 64 KB at a time, while Homa sends 9 KB packets one by one (its own software GSO is "temporarily broken" per its INSTALL.md, and its TCP-hijacking mode failed for large messages here — section 17). Suite 04 records this run and only fails if Homa's short-message p99 is more than 1.5× TCP's.</p>
 
 <!-- ================================================================== 10 -->
 <h2>11. Walkthrough E — incast</h2>
@@ -546,8 +548,25 @@ qdisc clsact ffff: parent ffff:fff1
 <p class="cap">8 s of bulk from h2 and h3 into h1, sw1 in priority mode, 200 packets per band.</p>
 <p>The lab keeps Homa's defaults — they are what is under test — and suite 07 holds the finding: with the defaults there are spurious RESENDs; with the scaled timers there are no drops, no timeouts and at most a third of the RESENDs. A larger queue does not help (tried: 400, 800, 1600 packets per band — still drops and timeouts): the retransmissions grow to fill it.</p>
 
+<!-- ================================================================== H -->
+<h2 class="page">14. Walkthrough H — segmentation offload</h2>
+<p>A sender saves CPU by handing its NIC one large frame and letting the NIC (or the kernel, just before the NIC) cut it into packets: <b>segmentation offload</b>. TCP gets it from virtio as TSO. Homa has two ways to ask for it, and with either, every message bigger than one packet was lost here. The two causes turned out to be different.</p>
+<table><tr><th>configuration</th><th class='num'>message</th><th class='num'>result</th><th class='num'>p50 (ms)</th><th class='num'>frames sent</th><th class='num'>packets received</th></tr><tr><td>defaults (one frame per packet)</td><td class='num'>1 KB</td><td class='num '>ok</td><td class='num'>0.14</td><td class='num'>15</td><td class='num'>15</td></tr><tr><td>defaults (one frame per packet)</td><td class='num'>10 KB</td><td class='num '>ok</td><td class='num'>0.18</td><td class='num'>30</td><td class='num'>30</td></tr><tr><td>defaults (one frame per packet)</td><td class='num'>1 MB</td><td class='num '>ok</td><td class='num'>15.4</td><td class='num'>1695</td><td class='num'>1695</td></tr><tr><td>native GSO, guest TSO on</td><td class='num'>1 KB</td><td class='num '>ok</td><td class='num'>0.14</td><td class='num'>15</td><td class='num'>15</td></tr><tr><td>native GSO, guest TSO on</td><td class='num'>10 KB</td><td class='num bad'>lost</td><td class='num'>–</td><td class='num'>20</td><td class='num'>0</td></tr><tr><td>native GSO, guest TSO on</td><td class='num'>1 MB</td><td class='num bad'>lost</td><td class='num'>–</td><td class='num'>156</td><td class='num'>0</td></tr><tr><td>native GSO, guest segments (TSO off)</td><td class='num'>1 KB</td><td class='num '>ok</td><td class='num'>0.16</td><td class='num'>15</td><td class='num'>15</td></tr><tr><td>native GSO, guest segments (TSO off)</td><td class='num'>10 KB</td><td class='num '>ok</td><td class='num'>0.22</td><td class='num'>15</td><td class='num'>30</td></tr><tr><td>native GSO, guest segments (TSO off)</td><td class='num'>1 MB</td><td class='num '>ok</td><td class='num'>15.5</td><td class='num'>255</td><td class='num'>1695</td></tr><tr><td>TCP hijacking</td><td class='num'>1 KB</td><td class='num '>ok</td><td class='num'>0.16</td><td class='num'>15</td><td class='num'>15</td></tr><tr><td>TCP hijacking</td><td class='num'>10 KB</td><td class='num bad'>lost</td><td class='num'>–</td><td class='num'>11938</td><td class='num'>569</td></tr><tr><td>TCP hijacking</td><td class='num'>1 MB</td><td class='num bad'>lost</td><td class='num'>–</td><td class='num'>897</td><td class='num'>0</td></tr></table>
+<p class="cap">Round trips h2 → h1, 5 per size. "frames" is what h2 handed its NIC (Homa's <span class="mono">packets_sent_DATA</span>), "packets" what h1 received: fewer frames than packets means offload worked. From <span class="mono">./lab.sh bench offload</span>; suite 08 checks the same.</p>
+<h3>Native GSO: the lab's wiring</h3>
+<div class="step"><div class="n">1</div><div>With <span class="mono">max_gso_size=100000</span> Homa builds GSO frames of up to 64 KB. The guest's virtio NIC advertises TSO, so the guest kernel hands the frame over whole.</div></div>
+<div class="step"><div class="n">2</div><div>The frame reaches the lab host's tap. The host has to cut it into packets for sw1, but it has no Homa module and can't segment IP protocol 146. It drops the frame: the tap's <span class="mono">tx_dropped</span> grew by exactly the number of GSO frames.</div></div>
+<div class="step"><div class="n">3</div><div>With TSO off on the guest NIC (configuration <span class="mono">gso_guest</span>), the guest segments the frame itself with Homa's <span class="mono">homa_gso_segment</span>, and every size works. That's despite INSTALL.md calling software GSO "temporarily broken".</div></div>
+<h3>TCP hijacking: a bug in the module</h3>
+<div class="step"><div class="n">1</div><div>With <span class="mono">hijack_tcp=1</span> Homa disguises its packets as TCP so the NIC's TSO cuts them. The receiver's GRO hook must recognise the disguise and turn the packets back into Homa.</div></div>
+<div class="step"><div class="n">2</div><div>The check reads the header through <span class="mono">skb_transport_header()</span>. For a full-size packet virtio copies only the Ethernet header into the skb's linear area; the rest stays in a page fragment. The check reads the wrong bytes and says "not Homa".</div></div>
+<div class="step"><div class="n">3</div><div>TCP receives a packet whose flags include RST and drops it: a kernel drop trace counted 1,701 <span class="mono">TCP_RESET</span> drops for one test. Short packets are copied whole, so control packets and one-packet messages work.</div></div>
+<div class="step"><div class="n">4</div><div><span class="mono">patches/0001-hijack-gro-read-header-from-frag0.patch</span> reads the header the GRO way (<span class="mono">skb_gro_header()</span>) before deciding. With it every size from 1 KB to 1 MB works, and 1 MB goes out as 510 TSO frames. The lab still runs the unpatched pinned module; <span class="mono">patches/README.md</span> has the bug report for upstream.</div></div>
+<div class="box warn"><b>Two traps on the way.</b> <span class="mono">hijack_tcp</span> is read when a socket is created, so servers started before the change don't hijack: an earlier "hijacking works for small RPCs" result came from a hijacking client and a plain server. And <span class="mono">ethtool -K tso</span> is a feature group: switching it on also switches on <span class="mono">tx-tcp-mangleid-segmentation</span>, so restoring the defaults takes two calls.</div>
+<p><b>What it changed in the findings.</b> With offload working for Homa (patched module, hijacking with GSO), Homa's long-message p50 on the W3 workload stayed at about 3.2 ms against TCP's 2.1–2.4 ms. So TSO does not explain TCP's lead on long messages (section 10); that remains open.</p>
+
 <!-- ================================================================== 13 -->
-<h2 class="page">14. Configuration and metrics</h2>
+<h2 class="page">15. Configuration and metrics</h2>
 <h3>Homa's sysctls</h3>
 <p>Homa's configuration lives under <span class="mono">net.homa</span> (documented in <span class="mono">man 7 homa</span>, installed on the hosts). The lab sets only <span class="mono">link_mbps=1000</span> (<span class="mono">/etc/sysctl.d/90-homa.conf</span>, from <span class="mono">HOMA_SYSCTL</span> in lab.conf); <span class="mono">unsched_cutoffs</span> and <span class="mono">cutoff_version</span> are maintained by homa_prio. <span class="mono">lab.sh homa sysctl name=value</span> sets one on all hosts.</p>
 <pre style="font-size:7.4pt;columns:2">net.homa.accept_bits = 0
@@ -612,8 +631,8 @@ net.homa.wmem_max = 100000000</pre>
 </table>
 
 <!-- ================================================================== 14 -->
-<h2>15. Tests</h2>
-<p><span class="mono">./lab.sh test</span> runs Robot Framework over <span class="mono">tests/suites</span>; the keywords (<span class="mono">tests/resources/HomaLab.py</span>) wrap <span class="mono">tools/homalab.py</span>. A run takes about 4 minutes and leaves <span class="mono">tests/results_leaves <span class="mono">tests/results_&lt;date&gt;_&lt;time&gt;/</span>lt;timestampleaves <span class="mono">tests/results_&lt;date&gt;_&lt;time&gt;/</span>gt;/</span> with Robot's report and log and <span class="mono">state/</span> — every host's Homa sysctls and module version and sw1's policy before the run. Runs take a lock (<span class="mono">/tmp/homa-lab-test.lock</span>); suites that change sw1 or sysctls put them back in their teardown.</p>
+<h2>16. Tests</h2>
+<p><span class="mono">./lab.sh test</span> runs Robot Framework over <span class="mono">tests/suites</span>; the keywords (<span class="mono">tests/resources/HomaLab.py</span>) wrap <span class="mono">tools/homalab.py</span>. A run takes about 5 minutes and leaves <span class="mono">tests/results_&lt;date&gt;_&lt;time&gt;/</span> with Robot's report and log and <span class="mono">state/</span> — every host's Homa sysctls and module version and sw1's policy before the run. Runs take a lock (<span class="mono">/tmp/homa-lab-test.lock</span>); suites that change sw1 or sysctls put them back in their teardown.</p>
 <table>
 <tr><th>suite</th><th>what it checks</th></tr>
 <tr><td>01 platform</td><td>the pinned kernel; the loaded module is the installed build at the pinned commit; unit tests passed in the image; sysctls, metrics, protocol-146 sockets (v4/v6); services; sw1's bridge and policy</td></tr>
@@ -623,24 +642,25 @@ net.homa.wmem_max = 100000000</pre>
 <tr><td>05 incast</td><td>bulk saturates h1's port; priority queues help Homa's probes; Homa beats TCP 10× at p50 and 3× at p99; TCP stays in the lowest queue</td></tr>
 <tr><td>06 loss</td><td>1/50 loss: every RPC completes; RESENDs and retransmissions; no timeouts</td></tr>
 <tr><td>07 timers</td><td>default timers cause spurious RESENDs; ×10 timers: no drops, no timeouts, ≥3× fewer RESENDs</td></tr>
+<tr><td>08 offload</td><td>defaults: one frame per packet; native GSO works when the guest segments and is lost on the host with TSO on; the hijack bug (tagged known-bug: fails once the pinned module is fixed)</td></tr>
 </table>
 <h3>The last run</h3>
-<table><tr><th>suite</th><th class='num'>passed</th><th class='num'>time</th></tr><tr><td>01 Platform</td><td class='num'>5/5</td><td class='num'>14 s</td></tr><tr><td>02 Function</td><td class='num'>5/5</td><td class='num'>28 s</td></tr><tr><td>03 Wire</td><td class='num'>6/6</td><td class='num'>18 s</td></tr><tr><td>04 Compare</td><td class='num'>2/2</td><td class='num'>33 s</td></tr><tr><td>05 Incast</td><td class='num'>4/4</td><td class='num'>80 s</td></tr><tr><td>06 Loss</td><td class='num'>2/2</td><td class='num'>2 s</td></tr><tr><td>07 Timers</td><td class='num'>2/2</td><td class='num'>22 s</td></tr></table><p class='cap'>Run results_2026-10-14_15-02-25: 26 passed, 0 failed.</p>
+<table><tr><th>suite</th><th class='num'>passed</th><th class='num'>time</th></tr><tr><td>01 Platform</td><td class='num'>5/5</td><td class='num'>13 s</td></tr><tr><td>02 Function</td><td class='num'>5/5</td><td class='num'>26 s</td></tr><tr><td>03 Wire</td><td class='num'>6/6</td><td class='num'>17 s</td></tr><tr><td>04 Compare</td><td class='num'>2/2</td><td class='num'>29 s</td></tr><tr><td>05 Incast</td><td class='num'>4/4</td><td class='num'>78 s</td></tr><tr><td>06 Loss</td><td class='num'>2/2</td><td class='num'>2 s</td></tr><tr><td>07 Timers</td><td class='num'>2/2</td><td class='num'>21 s</td></tr><tr><td>08 Offload</td><td class='num'>4/4</td><td class='num'>80 s</td></tr></table><p class='cap'>Run results_2026-10-15_21-29-45: 30 passed, 0 failed.</p>
 
 <!-- ================================================================== 15 -->
-<h2 class="page">16. Findings</h2>
+<h2 class="page">17. Findings</h2>
 <ol>
   <li><b>Priority queues do what Homa's design says.</b> With h1's port saturated, Homa's short messages keep near-idle latency when the switch has strict priority queues, and lose an order of magnitude without them. TCP cannot use the queues at all (section 11).</li>
   <li><b>Homa's timers are tuned for 25–100 Gbit/s.</b> At 1 Gbit/s, SRPT plus strict priority starves parked messages longer than <span class="mono">resend_ticks</span>; the spurious retransmissions overflow the switch and RPCs time out. Timers scaled ×10 remove it (section 13). Anyone running Homa on slower links (or emulating it) should scale <span class="mono">resend_ticks</span>, <span class="mono">resend_interval</span> and <span class="mono">timeout_ticks</span> with the link speed.</li>
-  <li><b>Light load:</b> Homa's short-message tail is about 0.6× TCP's, medians are similar, TCP wins long messages thanks to TSO (section 10).</li>
-  <li><b>Offloads:</b> <span class="mono">max_gso_size=100000</span> makes 1 MB RPCs time out here — consistent with the module's own note that GSO is temporarily broken. With <span class="mono">hijack_tcp=1</span> small RPCs work (p50 141 µs, the same as without it), but 1 MB RPCs time out. The defaults (<span class="mono">hijack_tcp=0</span>, <span class="mono">max_gso_size=1000</span>) are kept; not investigated further.</li>
-  <li><b>The unit tests</b> do not compile against Ubuntu's mainline headers as shipped; with two definitions they all pass (section 17).</li>
+  <li><b>Light load:</b> Homa's short-message tail is about 0.6× TCP's, medians are similar, and TCP wins long messages (section 10). Not because of TSO: with offload working for Homa, its long-message p50 didn't move (section 14). The cause is open.</li>
+  <li><b>Offloads (section 14):</b> native GSO is lost on the lab host when the guest NIC does TSO (the host can't segment Homa), and works when the guest segments; TCP hijacking loses every full-size packet because of a receive-side bug in the module (a patch is in <span class="mono">patches/</span>). The lab keeps the defaults.</li>
+  <li><b>The unit tests</b> do not compile against Ubuntu's mainline headers as shipped; with two definitions they all pass (section 18).</li>
   <li><b>Module lifecycle is clean:</b> it refuses to unload while sockets are open, unloads without residue, and is loaded again automatically by the first protocol-146 socket.</li>
   <li><b>A malformed request lingers by design.</b> A message shorter than the echo protocol's 8-byte header leaves the server waiting for a reply length it never gets; the client RESENDs, the server answers BUSY, indefinitely, until the client exits. Correct protocol behaviour — the server is "busy" — but a reason every lab command carries a timeout.</li>
 </ol>
 
 <!-- ================================================================== 16 -->
-<h2>17. Lessons learned building it</h2>
+<h2>18. Lessons learned building it</h2>
 <h3>The host was dropping the lab's packets</h3>
 <p>The first version linked the VMs with QEMU UDP-socket tunnels, as the other labs do. Homa ran, but with thousands of RESENDs and dozens of timeouts and no loss anywhere in the lab — sw1's counters showed no drops, the hosts' interfaces showed no errors. The host's <span class="mono">UdpRcvbufErrors</span> counter rose by 1,641 during one 100-RPC run: QEMU's socket backend leaves the host's default 208 KB receive buffer, about 23 jumbo frames, and Homa's bursts overflowed it. Raising <span class="mono">net.core.rmem_default</span> would have needed root and changed every lab on the host; isolated libvirt bridges fixed it locally and, as a bonus, gave the virtio NICs TSO. 1 MB each way went from 25.8 ms to 15.4 ms (line rate).</p>
 <h3>The unit tests and the distribution headers</h3>
@@ -659,7 +679,7 @@ net.homa.wmem_max = 100000000</pre>
 <p>Ubuntu's AppArmor profile for tshark does not let it read files in <span class="mono">/tmp</span> or a home directory, nor load plugins from <span class="mono">~/.local</span> — it fails with "permission denied" on a file it plainly can read. The lab pipes captures in (<span class="mono">sudo cat x.pcap | tshark -r -</span>) and installs the dissector in the global plugin directory.</p>
 
 <!-- ================================================================== 17 -->
-<h2 class="page">18. Troubleshooting</h2>
+<h2 class="page">19. Troubleshooting</h2>
 <table>
 <tr><th>symptom</th><th>cause and fix</th></tr>
 <tr><td><span class="mono">lab.sh wait</span> says NOT ready</td><td>still booting: SSH accepts the key but <span class="mono">pam_nologin</span> refuses logins until boot ends. <span class="mono">wait</span> retries for 6 minutes; check <span class="mono">./lab.sh log h1</span>.</td></tr>
@@ -667,16 +687,16 @@ net.homa.wmem_max = 100000000</pre>
 <tr><td>a stream of RESEND/BUSY with no test running</td><td>an orphaned client: <span class="mono">./lab.sh exec hosts 'pkill homa_test; pkill -x cp_node'</span> (the standing servers are systemd units and restart).</td></tr>
 <tr><td><span class="mono">modprobe -r homa</span>: in use</td><td>sockets are open — stop the units first: <span class="mono">lab.sh homa unload</span> does it.</td></tr>
 <tr><td>sw1 counters look wrong after a test</td><td>a suite was interrupted before its teardown: <span class="mono">lab.sh qos apply prio 1gbit 200</span>, <span class="mono">lab.sh qos loss eth1 off</span>, and the Homa timers: <span class="mono">lab.sh homa sysctl resend_ticks=5 resend_interval=5 timeout_ticks=100</span>.</td></tr>
-<tr><td>tshark: permission denied</td><td>AppArmor (section 17): <span class="mono">sudo cat file | tshark -r -</span>.</td></tr>
+<tr><td>tshark: permission denied</td><td>AppArmor (section 18): <span class="mono">sudo cat file | tshark -r -</span>.</td></tr>
 <tr><td>Robot run waits at the start</td><td>another run holds <span class="mono">/tmp/homa-lab-test.lock</span>.</td></tr>
 <tr><td>changing the module or kernel</td><td>edit <span class="mono">HOMA_COMMIT</span> / <span class="mono">KERNEL_*</span> in lab.conf, <span class="mono">lab.sh down; lab.sh clean; lab.sh image --force; lab.sh up</span>. Never rebuild the image under running overlays.</td></tr>
 </table>
 
 <!-- ================================================================== 18 -->
-<h2>19. What is not built yet</h2>
+<h2>20. What is not built yet</h2>
 <ul>
   <li>A second kernel track built from the upstream Homa patch series, to compare the stripped upstream version with the full module.</li>
-  <li>The offload investigation: why hijacked and GSO'd large messages time out here.</li>
+  <li>Reporting the hijack bug upstream (draft in <span class="mono">patches/README.md</span>), and finding why Homa's long messages are slower than TCP's here.</li>
   <li>HomaModule's cluster benchmarks (<span class="mono">cp_vs_tcp</span>, <span class="mono">cp_load</span>) adapted to four nodes.</li>
 </ul>
 
@@ -707,8 +727,8 @@ packet captures and Homa&#x27;s kernel metrics. Used by lab.sh (verify, bench) a
   homalab.py incast [--modes prio,fifo] [--protocols homa,tcp] [--seconds 10]   bulk h2,h3 -&gt; h1 + probes h4 -&gt; h1
   homalab.py loss [--n 50] [--count 300]        drop 1/N on sw1 towards h1; Homa recovers (RESENDs, no failures)
   homalab.py capture [--seconds 4]              one mixed run into h1, captured on sw1, decoded (types, priorities)
-  homalab.py metrics HOST                       /proc/net/homa_metrics summed over cores (JSON)
-Every command prints JSON on stdout (human summary on stderr).</pre>
+  homalab.py offload [--configs a,b] [--sizes 1000,..]   round trips per segmentation-offload setting (GSO, hijacking)
+  homalab.py metrics HOST                       /proc/net/homa_metrics summed over cores (JSON)</pre>
 
 <h2>Appendix B — sw-qos</h2>
 <pre style="font-size:7.4pt">#!/bin/bash

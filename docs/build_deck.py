@@ -88,7 +88,7 @@ para(t, "Homa, in a lab", space_after=0)
 sb = text(s, 0.9, 3.15, 11.0, 1.0, size=22, color=PALE)
 para(sb, "Testing the Linux kernel module for the Homa transport protocol", space_after=0)
 m = text(s, 0.9, 5.4, 11.0, 1.0, size=14, color="8DA2BE", spacing=1.4)
-para(m, f"homa-lab {version}  ·  kernel 6.17.8  ·  HomaModule main @ 65cecd7  ·  26 of 26 tests passing", space_after=2)
+para(m, f"homa-lab {version}  ·  kernel 6.17.8  ·  HomaModule main @ 65cecd7  ·  30 of 30 tests passing", space_after=2)
 para(m, "Companion to the lab walkthrough (homa-lab-walkthrough.pdf)", space_after=0)
 
 # 2 what the lab is
@@ -101,7 +101,7 @@ para(sb, "Behaviour and correctness, not datacenter benchmarks", space_after=0)
 cols = [("Pinned build", "Mainline kernel 6.17.8 and a pinned HomaModule commit. One command builds the image and runs the module's 840 unit tests."),
         ("A real switch", "sw1 shapes each port to 1 Gbit/s with 8 strict priority queues chosen by the DSCP bits Homa sets, or one FIFO."),
         ("Homa's own tools", "homa_test, the echo server and cp_node from the module's util/, driven over SSH; a Homa dissector for tshark."),
-        ("26 tests", "Robot suites: platform, function v4/v6, the wire, Homa vs TCP, incast, loss recovery, resend timers.")]
+        ("30 tests", "Robot suites: platform, function v4/v6, the wire, Homa vs TCP, incast, loss recovery, timers, offload.")]
 cw = (11.52 - 0.6) / 4
 for i, (a, b) in enumerate(cols):
     card(s, 0.9 + i * (cw + 0.2), 2.6, cw, 3.4, a, b, two=any(wraps(t, cw) for t, _ in cols), fill=DEEP, title_color="FFFFFF", body_color=PALE, line_color=DEEP, size=15)
@@ -173,14 +173,14 @@ for i, (a, b) in enumerate(ben):
 
 # drawbacks
 s = slide(notes="Drawbacks, several measured in this lab: without priority queues the short-message advantage shrinks about "
-                "10x at the median; TCP wins big transfers because NIC offloads only understand TCP; the default timers "
+                "10x at the median; TCP wins big transfers here (not because of offload: the gap stayed with offload working for Homa); the default timers "
                 "misfire at 1 Gbit/s. grant_fifo_fraction reserves bandwidth for the oldest message and is 0 (off) in this build.")
 head(s, "What it costs")
 drw = [("Not in Linux yet", "Out-of-tree module tied to kernel versions; upstreaming in stages since 2024."),
        ("Apps must change", "Message API, mapped receive buffers, 1 MB limit. Not a drop-in for TCP."),
        ("Datacenter only", "No encryption; NAT, firewalls and load balancers don't know protocol 146."),
        ("Needs switch config", "Without priority queues much of the benefit is gone."),
-       ("Offloads are for TCP", "NICs don't segment Homa; TCP was faster for big transfers here."),
+       ("Offload is fragile", "Hardware TSO is TCP-only. Homa's GSO hit a host limit here, its TCP disguise a module bug."),
        ("Big messages can starve", "Shortest-first favours small ones; the FIFO-share knob is off by default."),
        ("Tuned for 25–100 Gbit/s", "Default timers misfired on this lab's 1 Gbit/s links."),
        ("A young ecosystem", "Few tools and few deployments; even its dissector was stale.")]
@@ -201,7 +201,7 @@ table(s, 0.75, 1.95, 11.83, [
     ["Who sets the pace", "each sender, probing until loss", "the receiver, with grants"],
     ["Switch priority queues", "not used", "essential"],
     ["Short messages under load", "wait behind big transfers", "overtake them"],
-    ["Big transfers", "hardware offload, efficient", "no offload; can be starved"],
+    ["Big transfers", "hardware offload, efficient", "offload only by workarounds; can be starved"],
     ["Where it works", "everywhere", "inside one datacenter network"],
     ["In Linux", "since the beginning", "out-of-tree; upstreaming in progress"]],
     col_w=[3.0, 3.2, 3.2], size=16, row_h=0.52, bold_first_col=True)
@@ -314,12 +314,12 @@ hp = [ms(cmp_["homa"]["rtt_us"][c]["p99"]) for c in cls]; tp = [ms(cmp_["tcp"]["
 hm = [ms(cmp_["homa"]["rtt_us"][c]["p50"]) for c in cls]; tm = [ms(cmp_["tcp"]["rtt_us"][c]["p50"]) for c in cls]
 s = slide(notes=f"Light mixed load: Homa's W3 message-size distribution at 0.3 Gbit/s, about 170,000 RPCs each. Medians are close "
                 f"(short: Homa {hm[0]} ms, TCP {tm[0]} ms). Homa's p99 is lower for short and medium messages; TCP wins long "
-                f"messages because the virtio NICs give it segmentation offload and Homa gets none.")
+                f"messages. Not because of offload: with offload working for Homa (patched module) its long-message median stayed the same. The cause is open.")
 head(s, "Light load: a shorter tail, slower big transfers", "Same workload over each protocol — 99th-percentile round trip in ms")
 chart(s, 0.75, 1.9, 7.6, 5.2, "col", ["short ≤ 1 KB", "medium 1–100 KB", "long > 100 KB"], [("Homa", hp), ("TCP", tp)], [HOMA, TCP], size=13)
 d.side_note(s, 8.75, [f"Short messages: Homa p99 {hp[0]} ms, TCP {tp[0]} ms.",
                       f"Medians are close: {hm[0]} vs {tm[0]} ms.",
-                      f"Long messages: TCP {tp[2]} ms, Homa {hp[2]} ms — TCP has NIC offload, Homa doesn't."],
+                      f"Long messages: TCP {tp[2]} ms, Homa {hp[2]} ms. Not offload: the gap stayed with it working for Homa."],
             y=1.9, w=3.83, title="Reading it", h=4.2)
 s["items"][-1]["size"] = 15
 for p in s["items"][-1]["paras"]: p["size"] = 15 if not p["bold"] else 17
@@ -358,9 +358,9 @@ table(s, 0.75, 4.4, 11.83, [
     col_w=[4.6, 1.6, 1.6, 1.8, 1.8], size=16, row_h=0.6, bold_first_col=True)
 
 # tests
-s = slide(notes="./lab.sh test runs seven Robot suites in about 12 minutes; the last full run passed all 26 tests. "
-                "Suite 07 keeps the timer finding as a regression test.")
-head(s, "26 tests, seven suites", "./lab.sh test — about 12 minutes; the last full run passed 26 of 26")
+s = slide(notes="./lab.sh test runs eight Robot suites in about 5 minutes; the last full run passed all 30 tests. "
+                "Suite 07 keeps the timer finding as a regression test, suite 08 the offload findings, including the module bug.")
+head(s, "30 tests, eight suites", "./lab.sh test — about 5 minutes; the last full run passed 30 of 30")
 table(s, 0.75, 1.95, 11.83, [
     ["Suite", "What it checks", "Tests"],
     ["01 platform", "Pinned kernel, the right module build, unit tests passed, sysctls, services, sw1", "5"],
@@ -369,8 +369,9 @@ table(s, 0.75, 1.95, 11.83, [
     ["04 compare", "Homa vs TCP on the same workload; Homa's short tail not worse", "2"],
     ["05 incast", "Priority queues help Homa; Homa beats TCP 10× at p50, 3× at p99", "4"],
     ["06 loss", "1/50 loss: all RPCs complete, RESENDs answered, no timeouts", "2"],
-    ["07 timers", "Default timers misfire; ×10 timers: no drops, no timeouts", "2"]],
-    col_w=[1.9, 8.2, 1.0], size=15, row_h=0.6, bold_first_col=True)
+    ["07 timers", "Default timers misfire; ×10 timers: no drops, no timeouts", "2"],
+    ["08 offload", "GSO lost on the host with TSO on, works when the guest segments; the hijack bug", "4"]],
+    col_w=[1.9, 8.2, 1.0], size=15, row_h=0.55, bold_first_col=True)
 
 # findings (dark)
 s = slide(INK, "Summary of the findings. The priority-queue result reproduces Homa's central claim at small scale. The timer "
@@ -380,20 +381,20 @@ t = text(s, 0.9, 0.85, 11.5, 0.9, size=34, color="FFFFFF", bold=True, font=HEAD_
 para(t, "What we learned", space_after=0)
 cols = [("Priority queues work", f"Under incast Homa's short messages stayed at {p50[0]} ms median; one FIFO: {p50[1]} ms; TCP: {p50[2]:g}+ ms."),
         ("Scale the timers", "At 1 Gbit/s the default resend timer misfires; ×10 removes drops and timeouts."),
-        ("Offload gap", "NICs segment TCP, not Homa; its GSO and TCP-hijack modes failed for 1 MB messages here."),
+        ("Offload, two causes", "GSO frames die on the lab host (no Homa there); TCP hijacking hit a module bug, patched."),
         ("Lab plumbing matters", "UDP tunnels lost Homa's bursts silently; captures must be taken on the switch.")]
 cw = (11.52 - 0.6) / 4
 for i, (a, b) in enumerate(cols):
     card(s, 0.9 + i * (cw + 0.2), 2.0, cw, 3.0, a, b, two=any(wraps(t, cw) for t, _ in cols), fill=DEEP, title_color="FFFFFF", body_color=PALE, line_color=DEEP, size=15)
 
 # next steps
-s = slide(INK, "Not built yet: portal and NMS integration, the upstream patch-series kernel as a second track, the offload "
-               "investigation, and HomaModule's cluster benchmarks adapted to four nodes.")
+s = slide(INK, "Not built yet: the upstream patch-series kernel as a second track, reporting the hijack bug, the long-message "
+               "gap, and HomaModule's cluster benchmarks adapted to four nodes.")
 t = text(s, 0.9, 0.85, 11.5, 0.9, size=34, color="FFFFFF", bold=True, font=HEAD_FONT)
 para(t, "What's next", space_after=0)
-nxt = [("Portal and metrics", "A Prometheus exporter for Homa's metrics, a Grafana board, a portal on port 8108."),
+nxt = [("Report the bug", "The TCP-hijack fix and a bug report draft are in patches/, ready for HomaModule upstream."),
        ("Upstream track", "A second kernel built from the upstream Homa patches, compared with the module."),
-       ("Offloads", "Why GSO'd and TCP-hijacked large messages time out here."),
+       ("Long messages", "Why TCP still beats Homa on long messages here, with offload working for both."),
        ("Cluster benchmarks", "HomaModule's cp_vs_tcp and cp_load adapted to four nodes.")]
 for i, (a, b) in enumerate(nxt):
     card(s, 0.9 + i * (cw + 0.2), 2.0, cw, 3.0, a, b, num=i + 1, two=any(wraps(t, cw, True) for t, _ in nxt), fill=DEEP, title_color="FFFFFF", body_color=PALE, line_color=DEEP, size=15)

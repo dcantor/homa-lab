@@ -8,6 +8,7 @@ packet captures and Homa's kernel metrics. Used by lab.sh (verify, bench) and by
   homalab.py incast [--modes prio,fifo] [--protocols homa,tcp] [--seconds 10]   bulk h2,h3 -> h1 + probes h4 -> h1
   homalab.py loss [--n 50] [--count 300]        drop 1/N on sw1 towards h1; Homa recovers (RESENDs, no failures)
   homalab.py capture [--seconds 4]              one mixed run into h1, captured on sw1, decoded (types, priorities)
+  homalab.py offload [--configs a,b] [--sizes 1000,..]   round trips per segmentation-offload setting (GSO, hijacking)
   homalab.py metrics HOST                       /proc/net/homa_metrics summed over cores (JSON)
 Every command prints JSON on stdout (human summary on stderr).
 """
@@ -255,6 +256,53 @@ def loss(n=50, count=300, length=20000, src="h2", dst="h1"):
     return res
 
 
+# ---- segmentation offload (GSO, TCP hijacking) -------------------------------------------------------------------------
+# hijack_tcp is read when a socket is created, so every configuration restarts the echo servers. "guest_tso": the hosts'
+# virtio NICs claim TCP segmentation; a Homa GSO frame (IP protocol 146) handed to them reaches the lab host, which has no
+# Homa and drops it (the host must segment it because sw1's NICs take no offloads). With the guests' TSO off, the guest
+# kernel segments it with Homa's own homa_gso_segment.
+OFFLOAD = {
+    "default":     ({"max_gso_size": 1000, "hijack_tcp": 0}, True),
+    "gso":         ({"max_gso_size": 100000, "hijack_tcp": 0}, True),
+    "gso_guest":   ({"max_gso_size": 100000, "hijack_tcp": 0}, False),
+    "hijack":      ({"max_gso_size": 1000, "hijack_tcp": 1}, True),
+    "hijack_gso":  ({"max_gso_size": 100000, "hijack_tcp": 1}, True),
+}
+
+
+def offload_apply(name):
+    cfg, tso = OFFLOAD[name]
+    kv = " ".join(f"net.homa.{k}={v}" for k, v in cfg.items())
+    nic = "sudo ethtool -K eth1 tso on && sudo ethtool -K eth1 tx-tcp-mangleid-segmentation off" if tso else "sudo ethtool -K eth1 tso off"   # tso is a group: it sets mangleid too
+    parallel({h: (run, h, f"sudo sysctl -qw {kv} && {nic} >/dev/null && sudo systemctl restart homa-echo homa-echo6", 60, True) for h in hosts()})
+    time.sleep(1)
+
+
+def offload(configs=("default", "gso", "gso_guest", "hijack", "hijack_gso"), sizes=(1000, 10000, 100000, 1000000), count=10, src="h2", dst="h1"):
+    """Homa round trips src -> dst per offload configuration and message size: ok, latency, and how many DATA frames the
+    sender handed to its NIC against the DATA packets the receiver saw (fewer frames than packets = segmentation offload)."""
+    out = {"src": src, "dst": dst, "count": count, "sizes": list(sizes), "configs": {}}
+    try:
+        for name in configs:
+            offload_apply(name); rows = []
+            for size in sizes:
+                m0 = {h: metrics(h) for h in (src, dst)}
+                r = rtt(src, dst, length=size, count=count, timeout=60)
+                m1 = {h: metrics(h) for h in (src, dst)}
+                d = {h: mdiff(m1[h], m0[h]) for h in (src, dst)}
+                row = {"size": size, "ok": r["ok"], "p50": r.get("p50"), "p90": r.get("p90"),
+                       "frames_sent": d[src].get("packets_sent_DATA", 0), "packets_received": d[dst].get("packets_rcvd_DATA", 0),
+                       "resends": d[dst].get("packets_sent_RESEND", 0) + d[src].get("packets_sent_RESEND", 0),
+                       "timeouts": d[dst].get("rpc_timeouts", 0) + d[src].get("rpc_timeouts", 0)}
+                rows.append(row)
+                log(f"  {name:10} {size:>8} B  {'ok  ' if r['ok'] else 'FAIL'}  p50 {r.get('p50')} us  frames sent {row['frames_sent']}, "
+                    f"DATA packets received {row['packets_received']}, RESENDs {row['resends']}, timeouts {row['timeouts']}")
+            out["configs"][name] = rows
+    finally:
+        offload_apply("default")
+    return out
+
+
 def capture(seconds=4, host="h1"):
     """Capture Homa on sw1's port towards `host` (both directions) while `host` serves a mix (short + 500 KB messages from
     two peers); decode with the lab dissector. Not on the host itself: Homa consumes many arriving GRANT and DATA packets
@@ -306,6 +354,8 @@ def main():
     a.add_argument("--rate", type=int, default=500, help="bottleneck Mbit/s during the test")
     a = sp.add_parser("loss"); a.add_argument("--n", type=int, default=50); a.add_argument("--count", type=int, default=300)
     a = sp.add_parser("capture"); a.add_argument("--seconds", type=int, default=4)
+    a = sp.add_parser("offload"); a.add_argument("--configs", default=",".join(OFFLOAD)); a.add_argument("--sizes", default="1000,10000,100000,1000000")
+    a.add_argument("--count", type=int, default=10)
     a = sp.add_parser("metrics"); a.add_argument("host")
     o = ap.parse_args()
     if o.cmd == "matrix": r = matrix(o.count)
@@ -314,6 +364,7 @@ def main():
     elif o.cmd == "incast": r = incast(o.modes.split(","), o.protocols.split(","), o.seconds, rate_mbit=o.rate)
     elif o.cmd == "loss": r = loss(o.n, o.count)
     elif o.cmd == "capture": r = capture(o.seconds)
+    elif o.cmd == "offload": r = offload(o.configs.split(","), [int(x) for x in o.sizes.split(",")], o.count)
     else: r = metrics(o.host)
     print(json.dumps(r, indent=1))
     return 0 if (r.get("ok", True) if isinstance(r, dict) else True) else 1

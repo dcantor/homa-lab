@@ -1,0 +1,45 @@
+homa_hijack_gro_receive: read the TCP header the GRO way before deciding
+
+homa_skb_hijacked() reads flags and urgent through skb_transport_header(),
+but in the GRO path the headers of a large packet may still be in a page
+fragment (frag0), not the linear part of the skb: virtio_net with
+mergeable buffers copies only the Ethernet header into the linear area for
+packets larger than GOOD_COPY_LEN. The check then reads bytes past the
+linear data, the packet is not recognized as Homa and goes to TCP, which
+drops it (SKB_DROP_REASON_TCP_RESET: the hijack flags include RST). Short
+packets are copied whole into the linear area, so control packets and
+short messages work; every full-size DATA packet is lost.
+
+Read the header with skb_gro_header() for the decision, then pull the
+Homa header into the linear part before ip_hdr() is modified, as
+homa_gro_receive() does for native Homa packets.
+
+--- a/homa_hijack.c	2026-10-14 16:12:17.656523415 -0400
++++ b/homa_hijack.c	2026-10-14 16:12:17.710377548 -0400
+@@ -76,10 +76,25 @@
+ struct sk_buff *homa_hijack_gro_receive(struct list_head *held_list,
+ 					struct sk_buff *skb)
+ {
++	unsigned int off = skb_gro_offset(skb);
++	struct homa_common_hdr *h;
++
+ 	// tt_record4("homa_hijack_gro_receive got type 0x%x, flags 0x%x, "
+ 	//		"urgent 0x%x, id %d", h->type, h->flags,
+ 	//		ntohs(h->urgent), homa_local_id(h->sender_id));
+-	if (!homa_skb_hijacked(skb))
++
++	/* The header may still be in frag0 rather than in the linear part
++	 * of the skb, where skb_transport_header() (and so
++	 * homa_skb_hijacked()) would look: read it the GRO way.
++	 */
++	h = skb_gro_header(skb, off + offsetofend(struct homa_common_hdr,
++						  urgent), off);
++	if (!h || h->flags != HOMA_HIJACK_FLAGS ||
++	    h->urgent != htons(HOMA_HIJACK_URGENT))
++		return tcp_net_offload->callbacks.gro_receive(held_list, skb);
++
++	/* A Homa packet: make its headers addressable for ip_hdr() below. */
++	if (!homa_make_header_avl(skb))
+ 		return tcp_net_offload->callbacks.gro_receive(held_list, skb);
+ 
+ 	/* Change the packet's IP protocol to Homa so that it will get

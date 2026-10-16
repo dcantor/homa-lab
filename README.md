@@ -63,6 +63,7 @@ report. `/metrics` exports the counters; the NMS scrapes it (job `homa-lab`, ale
 ./lab.sh bench loss --n 50                      # 1/50 dropped towards h1
 ./lab.sh bench capture                          # decoded capture at h1: packet types, priorities on the wire
 ./lab.sh bench metrics h1                       # /proc/net/homa_metrics summed over cores
+./lab.sh bench offload --configs default,gso_guest --sizes 1000,10000,1000000   # finding 4 (configs: default gso gso_guest hijack hijack_gso)
 ```
 To read a capture with tshark on a host, pipe it in (`sudo cat x.pcap | tshark -r -`). Ubuntu's tshark AppArmor profile
 does not let it open files in /tmp or a home directory, or load plugins from `~/.local`. The dissector is installed in
@@ -78,8 +79,9 @@ the global plugin directory for the same reason.
 | 05 incast | two bulk senders saturate h1's port; with priority queues Homa's short-message p99 is below FIFO's (and p50 3× below), and below TCP's by 10× at p50 and 3× at p99 |
 | 06 loss | 1/50 random loss towards h1: every RPC completes; RESENDs sent and data retransmitted; no RPC timeouts |
 | 07 timers | the timer finding below: default timers cause spurious RESENDs; timers scaled ×10 give no drops, no timeouts and 3× fewer RESENDs |
+| 08 offload | finding 4: defaults send one frame per packet; native GSO works when the guest segments (TSO off) and is lost on the lab host with TSO on; the hijack bug (tagged `known-bug`: it expects 10 KB hijacked messages to fail, and fails itself once the pinned module is fixed) |
 
-## Findings so far (2026-10-13)
+## Findings so far (2026-10-13, offload 2026-10-14)
 1. **Priority queues work as Homa's design says.** In the incast run, with h1's 1 Gbit/s port at sw1 saturated
    (~900–970 Mbit/s of 500 KB messages), Homa's 100 B probes measured p50 0.34–0.42 ms (idle: 0.14 ms) with strict
    priority queues, against p50 3.0 ms with one FIFO. TCP probes in the same situation measured p50 13–30 ms. TCP marks
@@ -92,12 +94,29 @@ the global plugin directory for the same reason.
    timeouts, and a tenth of the RESENDs. At 25–100 Gbit/s the same bytes drain 25–100× faster, so the defaults suit
    that speed.
 3. **On a light mixed workload (W3, 0.3 Gbit/s)** Homa's short-message p99 is about 2.3 ms against TCP's 3.9 ms, while
-   the medians are within about 10% of each other. TCP is faster for long messages here because it gets TSO on the virtio NICs and Homa
-   does not (software GSO in the module is "temporarily broken", per its INSTALL.md).
-4. **Offload settings:** `max_gso_size=100000` (GSO) makes 1 MB RPCs time out in this setup, which matches the module's
-   note. With `hijack_tcp=1` (TCP hijacking for TSO), small RPCs work (p50 141 µs, no different from
-   without it), but 1 MB RPCs time out. The defaults (`hijack_tcp=0`, `max_gso_size=1000`) are kept. Not investigated
-   further.
+   the medians are within about 10% of each other. TCP is faster for long messages (p50 about 2.1–2.4 ms against Homa's
+   3.2 ms). That is *not* TCP's segmentation offload: with offload working for Homa too (finding 4, patched module, TSO
+   frames of up to 64 KB), Homa's long-message p50 stayed at about 3.2 ms. The cause is still open.
+4. **Segmentation offload (investigated 2026-10-14, suite 08, `./lab.sh bench offload`).** Homa can hand the NIC frames
+   larger than one packet in two ways, and in this lab both lost every message over one packet (10 KB and up), each for
+   a different reason:
+   - **Native GSO (`max_gso_size=100000`): the lab's wiring, not the module.** The guest's virtio NIC advertises TSO,
+     so the guest passes the large frame to the lab host. The host must cut it up for sw1, but it has no Homa module
+     and can't segment IP protocol 146, so it drops the frame: the host tap's `tx_dropped` matched the number of GSO
+     frames exactly. With the guests' TSO off (`ethtool -K eth1 tso off`), the guest segments the frame itself with
+     Homa's own `homa_gso_segment`, and every size works (1 MB: 340–510 frames for 2,260–3,390 packets), despite
+     INSTALL.md calling software GSO "temporarily broken".
+   - **TCP hijacking (`hijack_tcp=1`): a bug in the module.** On the receiver, Homa's GRO hook decides whether a "TCP"
+     packet is really Homa by reading the header through `skb_transport_header()`. For full-size packets, virtio leaves
+     the header in a page fragment (frag0), so the check reads the wrong bytes. The packet then goes to TCP, which
+     drops it as a reset: the drop tracer counted 1,701 `TCP_RESET` drops for one test on h1. Short packets are copied
+     whole, so control packets and one-packet messages work. `patches/0001-hijack-gro-read-header-from-frag0.patch`
+     reads the header the GRO way first. With it, every size from 1 KB to 1 MB works, and a 1 MB message goes out as
+     510 TSO frames. The lab keeps running the unpatched pinned module; `patches/README.md` has the bug report for
+     upstream.
+   - Also: `hijack_tcp` is read when a socket is created, so the echo servers have to be restarted after changing it.
+     An earlier claim here that "hijacking works for small RPCs" tested a hijacking client against a server that wasn't.
+   The defaults (`hijack_tcp=0`, `max_gso_size=1000`, guest TSO on) are kept.
 5. **Unit tests vs distro headers:** HomaModule's user-space unit-test harness does not compile against the Ubuntu mainline
    headers as-is. `mock.h` redeclares `current_task` without the `__seg_gs` address space, and `mock.c` defines
    `preempt_count_add/sub`. The build adds a header that undefines `CONFIG_USE_X86_SEG_SUPPORT` and defines
@@ -109,7 +128,7 @@ the global plugin directory for the same reason.
    now carries its own timeout so nothing is left running.
 
 ## Walkthrough
-`docs/homa-lab-walkthrough.pdf` (33 pages): Homa in five minutes, the architecture, the image build, and walkthroughs
+`docs/homa-lab-walkthrough.pdf` (35 pages): Homa in five minutes, the architecture, the image build, and walkthroughs
 of the lab coming up, one RPC on the wire, sw1's queues, Homa vs TCP, incast, loss and the timers, with the tests and
 findings. Rebuild it with `tests/.venv/bin/python tools/build_walkthrough.py [--refresh]` (`--refresh` re-measures, ~5 min).
 
@@ -122,4 +141,4 @@ Slides: `docs/homa-lab.pptx` (22 slides with speaker notes, the same data), rebu
 wraps homalab.py) · `tests/results_<date>_<time>/` (per run: Robot output and `state/`, the sysctls / module / sw1 policy before the run; `results/latest` links the newest for Lab Hub) · `webapp/` (the portal).
 
 ## Not yet
-The upstream patch-series kernel as a second track, the hijack/GSO investigation.
+The upstream patch-series kernel as a second track. Filing the hijack bug upstream (draft in `patches/README.md`). Why Homa's long messages are slower than TCP's here (finding 3).
